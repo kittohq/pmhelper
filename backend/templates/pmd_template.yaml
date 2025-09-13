@@ -1,0 +1,187 @@
+pmd_template:
+  header:
+    title: "{{product_name}} - Product Management Document"
+    product: "{{product_name}}"
+    author: "{{author_name}}"
+    date: "{{date}}"
+    version: "{{version}}"
+    
+  executive_summary:
+    prompt: "Provide a brief executive summary of this product initiative"
+    sections:
+      - overview
+      - key_objectives
+      - expected_impact
+    
+  problem_statement:
+    prompt: "Describe the problem this product solves"
+    sections:
+      description:
+        prompt: "What is the core problem?"
+        max_length: 500
+      user_pain_points:
+        prompt: "List the main user pain points"
+        type: list
+        min_items: 3
+        max_items: 7
+      business_impact:
+        prompt: "What is the business impact of not solving this?"
+        max_length: 300
+      supporting_data:
+        prompt: "Provide any supporting data or research"
+        optional: true
+        
+  solution:
+    prompt: "Describe the proposed solution"
+    sections:
+      overview:
+        prompt: "High-level solution description"
+        max_length: 500
+      key_features:
+        prompt: "List the key features of the solution"
+        type: list
+        min_items: 3
+        max_items: 10
+        item_structure:
+          - name
+          - description
+          - priority
+      user_stories:
+        prompt: "Define user stories"
+        type: list
+        format: "As a [user], I want [feature] so that [benefit]"
+      success_metrics:
+        prompt: "How will success be measured?"
+        type: list
+        min_items: 3
+        examples:
+          - "Increase user engagement by X%"
+          - "Reduce support tickets by Y%"
+          - "Achieve Z NPS score"
+          
+  market_analysis:
+    prompt: "Analyze the market opportunity"
+    optional: true
+    sections:
+      target_audience:
+        prompt: "Who is the target audience?"
+        subsections:
+          - primary_users
+          - secondary_users
+          - user_personas
+      market_size:
+        prompt: "What is the addressable market?"
+        optional: true
+      competitors:
+        prompt: "List main competitors and their offerings"
+        type: list
+      differentiators:
+        prompt: "What makes our solution unique?"
+        type: list
+        min_items: 3
+        
+  technical_considerations:
+    prompt: "High-level technical considerations"
+    sections:
+      architecture_overview:
+        prompt: "Describe the high-level architecture"
+        optional: true
+      integrations:
+        prompt: "What systems need to be integrated?"
+        type: list
+      constraints:
+        prompt: "Any technical constraints or limitations?"
+        type: list
+        optional: true
+        
+  risks_and_mitigations:
+    prompt: "Identify risks and mitigation strategies"
+    sections:
+      risks:
+        prompt: "List potential risks"
+        type: list
+        min_items: 3
+        item_structure:
+          - risk_description
+          - probability: [low, medium, high]
+          - impact: [low, medium, high]
+          - mitigation_strategy
+      dependencies:
+        prompt: "List key dependencies"
+        type: list
+        optional: true
+      assumptions:
+        prompt: "List key assumptions"
+        type: list
+        min_items: 2
+        
+  timeline:
+    prompt: "Define the timeline and milestones"
+    sections:
+      phases:
+        prompt: "Break down into development phases"
+        type: list
+        item_structure:
+          - phase_name
+          - duration
+          - deliverables
+          - success_criteria
+      milestones:
+        prompt: "Key milestones"
+        type: list
+        format: "date: milestone_description"
+      release_plan:
+        prompt: "Describe the release strategy"
+        options:
+          - "Big bang release"
+          - "Phased rollout"
+          - "Beta program"
+          - "Feature flags"
+          
+  stakeholders:
+    prompt: "Identify key stakeholders"
+    sections:
+      internal:
+        type: list
+        categories:
+          - executive_sponsors
+          - product_team
+          - engineering_team
+          - design_team
+          - marketing_team
+          - sales_team
+          - support_team
+      external:
+        type: list
+        optional: true
+        categories:
+          - customers
+          - partners
+          - vendors
+          
+  success_criteria:
+    prompt: "Define clear success criteria"
+    sections:
+      short_term:
+        prompt: "3-month success criteria"
+        type: list
+        min_items: 3
+      medium_term:
+        prompt: "6-month success criteria"
+        type: list
+        min_items: 3
+      long_term:
+        prompt: "12-month success criteria"
+        type: list
+        min_items: 3
+        
+  appendix:
+    optional: true
+    sections:
+      research_data:
+        prompt: "Additional research or data"
+      mockups:
+        prompt: "Link to design mockups"
+      references:
+        prompt: "External references and resources"
+        type: list
