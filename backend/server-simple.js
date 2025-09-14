@@ -176,7 +176,7 @@ Respond with ONLY one word: "SUFFICIENT" or "NEEDS_INFO"`;
         num_predict: 10
       }
     }, {
-      timeout: 30000
+      timeout: 120000  // Increased to 2 minutes
     });
 
     const assessment = response.data.message?.content || '';
@@ -267,10 +267,78 @@ app.get('/api/ollama/tags', async (req, res) => {
     res.json(response.data);
   } catch (error) {
     console.error('Ollama tags error:', error.message);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to get Ollama models',
-      message: error.message 
+      message: error.message
     });
+  }
+});
+
+// Background job endpoints for long-running operations
+const jobManager = require('./services/backgroundJobs');
+
+// Start a background job for specification generation
+app.post('/api/jobs/generate-specification', (req, res) => {
+  const { prompt, model } = req.body;
+
+  if (!prompt) {
+    return res.status(400).json({ error: 'Prompt is required' });
+  }
+
+  const jobId = jobManager.createJob('generate-specification', {
+    prompt,
+    model: model || 'mistral:7b-instruct'
+  });
+
+  console.log(`Created background job ${jobId} for specification generation`);
+
+  res.json({
+    jobId,
+    message: 'Specification generation started in background',
+    checkStatusUrl: `/api/jobs/${jobId}/status`,
+    getResultUrl: `/api/jobs/${jobId}/result`
+  });
+});
+
+// Check job status
+app.get('/api/jobs/:jobId/status', (req, res) => {
+  const { jobId } = req.params;
+  const status = jobManager.getJobStatus(jobId);
+
+  if (!status) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  res.json(status);
+});
+
+// Get job result
+app.get('/api/jobs/:jobId/result', (req, res) => {
+  const { jobId } = req.params;
+  const result = jobManager.getJobResult(jobId);
+
+  if (!result) {
+    return res.status(404).json({ error: 'Job not found' });
+  }
+
+  res.json(result);
+});
+
+// List all jobs
+app.get('/api/jobs', (req, res) => {
+  const jobs = jobManager.getAllJobs();
+  res.json(jobs);
+});
+
+// Cancel a job
+app.delete('/api/jobs/:jobId', (req, res) => {
+  const { jobId } = req.params;
+  const cancelled = jobManager.cancelJob(jobId);
+
+  if (cancelled) {
+    res.json({ message: 'Job cancelled successfully' });
+  } else {
+    res.status(400).json({ error: 'Job cannot be cancelled or not found' });
   }
 });
 

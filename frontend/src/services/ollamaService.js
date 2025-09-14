@@ -3,7 +3,7 @@ import axios from 'axios';
 class OllamaService {
   constructor() {
     // Use backend proxy to avoid CORS issues
-    this.baseURL = 'http://localhost:3003/api/ollama';
+    this.baseURL = 'http://localhost:3001/api/ollama';
     // Try to load saved model from localStorage, default to mistral
     this.model = localStorage.getItem('ollamaModel') || 'mistral:7b-instruct';
     this.isConnected = false;
@@ -112,6 +112,41 @@ class OllamaService {
       }
       
       throw error; // Throw the actual error instead of generic message
+    }
+  }
+
+  async chatWithOptions(prompt, context = '', customOptions = {}) {
+    try {
+      const requestBody = {
+        model: this.model,
+        prompt: prompt,
+        stream: false,
+        options: {
+          temperature: customOptions.temperature || 0.7,
+          top_k: customOptions.top_k || 40,
+          top_p: customOptions.top_p || 0.9,
+          num_predict: customOptions.num_predict || 4096,
+          ...(customOptions.seed && { seed: customOptions.seed }) // Include seed if provided
+        }
+      };
+
+      if (context && context.trim()) {
+        requestBody.context = context;
+      }
+
+      console.log('Sending request with custom options:', requestBody.options);
+
+      const response = await axios.post(`${this.baseURL}/generate`, requestBody, {
+        headers: {
+          'Content-Type': 'application/json'
+        },
+        timeout: 300000 // 5 minute timeout
+      });
+
+      return response.data.response || response.data;
+    } catch (error) {
+      console.error('Ollama chat with options error:', error);
+      throw error;
     }
   }
 

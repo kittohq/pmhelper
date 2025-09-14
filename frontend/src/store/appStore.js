@@ -8,8 +8,9 @@ export const useStore = create(
       projects: [],
       currentProject: null,
       addProject: (project) => {
-        const newProject = { 
-          id: Date.now(), 
+        // Use timestamp + random to avoid duplicate IDs
+        const newProject = {
+          id: Date.now() + Math.floor(Math.random() * 1000),
           ...project,
           prd: project.prd || null,
           createdAt: new Date().toISOString(),
@@ -118,7 +119,7 @@ export const useStore = create(
       createSpecification: (prdId, templateType = 'implementation') => {
         const state = get();
         const newSpec = {
-          id: Date.now(),
+          id: Date.now() + Math.floor(Math.random() * 1000),
           prdId,
           templateType,
           engineeringNotes: state.engineeringNotes || '',
