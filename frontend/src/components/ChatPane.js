@@ -3,6 +3,7 @@ import styled from '@emotion/styled';
 import { Send, Bot, User, Loader } from 'lucide-react';
 import { useStore } from '../store/appStore';
 import ReactMarkdown from 'react-markdown';
+import toast from 'react-hot-toast';
 
 const Container = styled.div`
   flex: 1;
@@ -200,17 +201,23 @@ function ChatPane({ onSendMessage }) {
     const message = input.trim();
     setInput('');
     setIsLoading(true);
+    console.log('Starting request, spinner ON');
 
-    // Set a timeout to stop "AI is thinking" after 15 seconds
+    // Set a timeout to stop "AI is thinking" after 5 minutes (Ollama can be slow)
     const timeoutId = setTimeout(() => {
       setIsLoading(false);
-    }, 15000);
+      toast.error('Request timed out. Please try again or use a smaller model.');
+    }, 300000); // 5 minutes
 
     try {
       await onSendMessage(message);
+    } catch (error) {
+      console.error('Error sending message:', error);
+      // Error is already handled in onSendMessage, just log it here
     } finally {
       clearTimeout(timeoutId);
       setIsLoading(false);
+      console.log('Request complete, spinner OFF');
     }
   };
 

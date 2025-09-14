@@ -1,0 +1,348 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ollama Connection Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 40px auto;
+            padding: 20px;
+            background: #f5f5f5;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 30px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            border-bottom: 2px solid #667eea;
+            padding-bottom: 10px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 15px;
+            background: #f9f9f9;
+            border-radius: 6px;
+            border-left: 4px solid #667eea;
+        }
+        .test-title {
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #444;
+        }
+        button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-right: 10px;
+            margin-top: 10px;
+            font-size: 14px;
+        }
+        button:hover {
+            background: #5a67d8;
+        }
+        button:disabled {
+            background: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 13px;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success {
+            border-left: 4px solid #28a745;
+            background: #f0fff4;
+        }
+        .error {
+            border-left: 4px solid #dc3545;
+            background: #fff5f5;
+        }
+        .processing {
+            border-left: 4px solid #ffc107;
+            background: #fffdf0;
+        }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 12px;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+        .badge-success {
+            background: #28a745;
+            color: white;
+        }
+        .badge-error {
+            background: #dc3545;
+            color: white;
+        }
+        .badge-processing {
+            background: #ffc107;
+            color: #333;
+        }
+        .job-status {
+            margin-top: 10px;
+            padding: 10px;
+            background: #e8f4ff;
+            border-radius: 4px;
+            font-size: 13px;
+        }
+        .elapsed-time {
+            float: right;
+            color: #666;
+            font-size: 12px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Ollama Connection & Background Job Test</h1>
+
+        <div class="test-section">
+            <div class="test-title">1. Test Backend Health</div>
+            <button onclick="testBackend()">Test Backend API</button>
+            <div id="backend-result"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">2. Test Ollama Connection</div>
+            <button onclick="testOllama()">Test Ollama Models</button>
+            <div id="ollama-result"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">3. Test Quick Generation (15s timeout)</div>
+            <button onclick="testQuickGeneration()">Generate Short Response</button>
+            <div id="quick-result"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">4. Test Background Job (No timeout)</div>
+            <button onclick="testBackgroundJob()">Start Background Job</button>
+            <button onclick="checkJobStatus()" id="check-status-btn" style="display:none;">Check Status</button>
+            <div id="job-result"></div>
+            <div id="job-status"></div>
+        </div>
+
+        <div class="test-section">
+            <div class="test-title">5. Test Long Generation (Simulate timeout)</div>
+            <button onclick="testLongGeneration()">Generate Long Response</button>
+            <div id="long-result"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3001';
+        let currentJobId = null;
+        let pollingInterval = null;
+        let startTime = null;
+
+        function showResult(elementId, content, type = 'success') {
+            const element = document.getElementById(elementId);
+            element.className = `result ${type}`;
+            element.textContent = content;
+        }
+
+        async function testBackend() {
+            try {
+                showResult('backend-result', 'Testing...', 'processing');
+                const response = await fetch(`${API_BASE}/api`);
+                const data = await response.json();
+                showResult('backend-result', JSON.stringify(data, null, 2), 'success');
+            } catch (error) {
+                showResult('backend-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testOllama() {
+            try {
+                showResult('ollama-result', 'Fetching available models...', 'processing');
+                const response = await fetch(`${API_BASE}/api/ollama/tags`);
+                const data = await response.json();
+
+                if (data.models && data.models.length > 0) {
+                    const modelList = data.models.map(m => `• ${m.name} (${(m.size / 1e9).toFixed(1)}GB)`).join('\n');
+                    showResult('ollama-result', `Available Models:\n${modelList}`, 'success');
+                } else {
+                    showResult('ollama-result', 'No models found. Run: ollama pull mistral:7b-instruct', 'error');
+                }
+            } catch (error) {
+                showResult('ollama-result', `Error: ${error.message}\n\nMake sure Ollama is running: ollama serve`, 'error');
+            }
+        }
+
+        async function testQuickGeneration() {
+            try {
+                showResult('quick-result', 'Generating quick response (15s timeout)...', 'processing');
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 15000);
+
+                const response = await fetch(`${API_BASE}/api/ollama/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'mistral:7b-instruct',
+                        prompt: 'Write a single sentence about AI.',
+                        stream: false,
+                        options: { temperature: 0.3, num_predict: 50 }
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const data = await response.json();
+                showResult('quick-result', `Response: ${data.response || 'No response'}`, 'success');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showResult('quick-result', 'Request timed out after 15 seconds', 'error');
+                } else {
+                    showResult('quick-result', `Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        async function testBackgroundJob() {
+            try {
+                showResult('job-result', 'Starting background job...', 'processing');
+
+                const response = await fetch(`${API_BASE}/api/jobs/generate-specification`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        prompt: 'Create a detailed technical specification for a simple TODO app with the following sections: 1) Architecture, 2) Database Schema, 3) API Endpoints, 4) Security. Be thorough and specific.',
+                        model: 'mistral:7b-instruct'
+                    })
+                });
+
+                const data = await response.json();
+                currentJobId = data.jobId;
+                startTime = Date.now();
+
+                showResult('job-result', `Job started: ${currentJobId}\nPolling for status...`, 'processing');
+                document.getElementById('check-status-btn').style.display = 'inline-block';
+
+                // Start polling
+                startPolling();
+            } catch (error) {
+                showResult('job-result', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        function startPolling() {
+            if (pollingInterval) clearInterval(pollingInterval);
+
+            pollingInterval = setInterval(async () => {
+                if (!currentJobId) return;
+
+                try {
+                    const response = await fetch(`${API_BASE}/api/jobs/${currentJobId}/status`);
+                    const status = await response.json();
+
+                    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                    const minutes = Math.floor(elapsed / 60);
+                    const seconds = elapsed % 60;
+                    const timeStr = `${minutes}:${seconds.toString().padStart(2, '0')}`;
+
+                    let statusHtml = `<div class="job-status">`;
+                    statusHtml += `<span class="elapsed-time">Elapsed: ${timeStr}</span>`;
+                    statusHtml += `<strong>Status:</strong> ${status.status}`;
+
+                    if (status.status === 'completed') {
+                        statusHtml += ` <span class="status-badge badge-success">COMPLETE</span>`;
+                        statusHtml += `<br><strong>Result Length:</strong> ${status.resultLength} characters`;
+                        clearInterval(pollingInterval);
+
+                        // Fetch the actual result
+                        const resultResponse = await fetch(`${API_BASE}/api/jobs/${currentJobId}/result`);
+                        const result = await resultResponse.json();
+                        if (result.success) {
+                            showResult('job-result', `✅ Generation Complete!\n\nFirst 500 chars:\n${result.result.substring(0, 500)}...`, 'success');
+                        }
+                    } else if (status.status === 'failed') {
+                        statusHtml += ` <span class="status-badge badge-error">FAILED</span>`;
+                        statusHtml += `<br><strong>Error:</strong> ${status.error}`;
+                        clearInterval(pollingInterval);
+                        showResult('job-result', `❌ Job failed: ${status.error}`, 'error');
+                    } else {
+                        statusHtml += ` <span class="status-badge badge-processing">PROCESSING</span>`;
+                    }
+
+                    statusHtml += `</div>`;
+                    document.getElementById('job-status').innerHTML = statusHtml;
+                } catch (error) {
+                    console.error('Polling error:', error);
+                }
+            }, 3000);
+        }
+
+        async function checkJobStatus() {
+            if (!currentJobId) {
+                showResult('job-status', 'No job ID available', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/api/jobs/${currentJobId}/status`);
+                const status = await response.json();
+                showResult('job-status', JSON.stringify(status, null, 2), 'processing');
+            } catch (error) {
+                showResult('job-status', `Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function testLongGeneration() {
+            try {
+                showResult('long-result', 'Attempting long generation (will likely timeout in frontend)...', 'processing');
+
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 30000); // 30 second timeout
+
+                const response = await fetch(`${API_BASE}/api/ollama/generate`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        model: 'mistral:7b-instruct',
+                        prompt: 'Write a comprehensive 2000-word technical specification for a distributed microservices architecture including: system design, service boundaries, data flow, API contracts, deployment strategy, monitoring, security considerations, and scalability plans. Be extremely detailed.',
+                        stream: false,
+                        options: { temperature: 0.7, num_predict: 4096 }
+                    }),
+                    signal: controller.signal
+                });
+
+                clearTimeout(timeoutId);
+                const data = await response.json();
+                showResult('long-result', `Success! Response length: ${data.response?.length || 0} characters`, 'success');
+            } catch (error) {
+                if (error.name === 'AbortError') {
+                    showResult('long-result', '⏱️ Frontend timeout after 30s. Use background jobs for long operations!', 'error');
+                } else {
+                    showResult('long-result', `Error: ${error.message}`, 'error');
+                }
+            }
+        }
+
+        // Run basic tests on load
+        window.addEventListener('load', () => {
+            testBackend();
+            testOllama();
+        });
+    </script>
+</body>
+</html>

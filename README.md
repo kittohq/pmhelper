@@ -178,6 +178,23 @@ See `/prompts/` directory for all extracted prompts.
   - Testing guidelines
   - Deployment considerations
 
+- **Temperature Settings Guide**: See `/TEMPERATURE_SETTINGS.md` for:
+  - AI temperature configurations for different tasks
+  - Trade-offs between consistency and creativity
+  - Best practices for temperature selection
+  - Implementation examples
+
+- **PRD Editor Features Guide**: See `/PRD_EDITOR_FEATURES.md` for:
+  - How the LLM response is parsed (markdown to sections)
+  - Helper prompts functionality (local, not AI)
+  - Suggest button behavior (section-specific AI enhancement)
+  - Different interaction modes and best practices
+
+- **Troubleshooting Guide**: See `/TROUBLESHOOTING.md` for:
+  - Common Ollama connection issues and solutions
+  - Handling generation timeouts
+  - Background job system usage
+  - Performance optimization tips
 ## 📁 Project Structure
 
 ```

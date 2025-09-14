@@ -5,6 +5,7 @@ import LeftPanel from './components/LeftPanel';
 import DocumentsPane from './components/DocumentsPane';
 import ChatPane from './components/ChatPane';
 import PRDEditor from './components/PRDEditor';
+import SpecificationView from './components/SpecificationView';
 import SystemPromptModal from './components/SystemPromptModal';
 import { useStore } from './store/appStore';
 import { ollamaService } from './services/ollamaService';
@@ -43,6 +44,29 @@ const RightPane = styled.div`
   overflow: hidden;
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+`;
+
+const Tab = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: ${props => props.active ? 'white' : 'transparent'};
+  border: none;
+  border-bottom: ${props => props.active ? '2px solid #667eea' : '2px solid transparent'};
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: ${props => props.active ? '600' : '400'};
+  color: ${props => props.active ? '#667eea' : '#666'};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${props => props.active ? 'white' : '#f0f0f0'};
+  }
+`;
+
 const Header = styled.header`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -79,6 +103,7 @@ function App() {
   const [availableModels, setAvailableModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(ollamaService.getCurrentModel());
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+  const [rightPaneTab, setRightPaneTab] = useState('prd'); // 'prd' or 'specification'
 
   useEffect(() => {
     // Initialize with a PRD template if one doesn't exist
@@ -270,13 +295,17 @@ function App() {
     const prdSections = currentPRD?.sections || {};
     
     // Determine if user is asking for help with specific content
-    const isAskingForContent = message.toLowerCase().includes('help me') || 
+    // This triggers the PRD generation/guidance flow vs general Q&A
+    const isAskingForContent = message.toLowerCase().includes('help me') ||
                                message.toLowerCase().includes('create') ||
                                message.toLowerCase().includes('write') ||
                                message.toLowerCase().includes('define') ||
                                message.toLowerCase().includes('my project') ||
                                message.toLowerCase().includes('my product') ||
-                               message.toLowerCase().includes('prd for me');
+                               message.toLowerCase().includes('prd for me') ||
+                               message.toLowerCase().includes('build') ||
+                               message.toLowerCase().includes('i want to') ||
+                               message.toLowerCase().includes('i need');
     
     // Check for missing required sections in current PRD
     const missingSections = currentPRD?.sections ? 
@@ -322,19 +351,65 @@ Consider:
 
 Respond with ONLY one word: "SUFFICIENT" if you can generate meaningful content, or "NEEDS_INFO" if critical details are missing.`;
 
-      // Make assessment call
+      // Let AI assess if request is underspecified
       let isUnderspecified = false;
+
       try {
-        const assessmentResponse = await ollamaService.chat(assessmentPrompt, '');
+        // Create a focused assessment prompt with low temperature for consistency
+        const focusedAssessmentPrompt = `You are evaluating if a user's request has enough information to create a meaningful Product Requirements Document (PRD).
+
+User's request: "${message}"
+
+To create a meaningful PRD, we need:
+1. A clear product/feature name or concept
+2. Understanding of the problem being solved
+3. Target users or audience
+4. At least high-level functionality or features
+5. Some notion of success or goals
+
+Evaluate the request above. Does it contain enough information to draft initial PRD sections (even if details would need refinement)?
+
+Examples:
+- "I want to build a fitness app" → NEEDS_INFO (too vague, no problem/users/features specified)
+- "I want to build FitTracker, a fitness app" → NEEDS_INFO (just a name, no problem/users/features)
+- "I want to build a fitness app for busy professionals to track workouts" → SUFFICIENT (has users and purpose)
+- "Build an app to help people track fitness goals with social features" → SUFFICIENT (has purpose and features)
+
+Respond with ONLY one word: SUFFICIENT or NEEDS_INFO`;
+
+        console.log('Sending assessment to Ollama...');
+
+        // Use moderate temperature for balance between consistency and intelligence
+        const assessmentResponse = await ollamaService.chatWithOptions(
+          focusedAssessmentPrompt,
+          '',
+          {
+            temperature: 0.3,  // Low but not too low - maintains some reasoning ability
+            top_k: 20,         // Slightly wider choice for better context understanding
+            top_p: 0.7,        // Moderate probability distribution
+            num_predict: 20,   // Only need one word response
+            seed: 42           // Fixed seed for more reproducibility (if model supports it)
+          }
+        );
+
         console.log('Assessment response:', assessmentResponse);
-        
-        isUnderspecified = assessmentResponse.trim().toUpperCase().includes('NEEDS_INFO');
+
+        // Check if response indicates need for more info
+        const responseText = assessmentResponse.trim().toUpperCase();
+        isUnderspecified = responseText.includes('NEEDS_INFO') ||
+                          responseText.includes('NEED') ||
+                          responseText.includes('INSUFFICIENT');
+
+        console.log('Assessment result:', isUnderspecified ? 'NEEDS_INFO' : 'SUFFICIENT');
+
       } catch (error) {
         console.error('Assessment failed, using fallback logic:', error);
-        // Fallback to simple check if assessment fails
-        isUnderspecified = message.length < 100 && 
+        // Fallback: if very short and doesn't mention key elements
+        isUnderspecified = message.length < 80 &&
                           !message.toLowerCase().includes('problem') &&
-                          !message.toLowerCase().includes('users');
+                          !message.toLowerCase().includes('users') &&
+                          !message.toLowerCase().includes('help') &&
+                          !message.toLowerCase().includes('track');
       }
       
       if (isUnderspecified) {
@@ -554,24 +629,95 @@ Try asking about specific sections like "How do I write user stories?" or "What 
   };
 
   const updatePRDFromAIResponse = (response, userMessage) => {
-    // Try to detect which section the user is asking about
+    // First, check if this is a full PRD response with multiple sections
+    const hasProblemStatement = response.includes('Problem Statement') || response.includes('## Problem') || response.includes('**Problem Statement**');
+    const hasProposedSolution = response.includes('Proposed Solution') || response.includes('## Solution') || response.includes('**Proposed Solution**');
+    const hasSuccessMetrics = response.includes('Success Metrics') || response.includes('## Metrics') || response.includes('**Success Metrics**');
+
+    if (hasProblemStatement || hasProposedSolution || hasSuccessMetrics) {
+      // This looks like a full PRD response, parse all sections
+      console.log('Detected full PRD response, parsing sections...');
+
+      const sections = {};
+
+      // Parse Problem Statement - handle bold markdown format
+      const problemMatch = response.match(/(?:\*\*Problem Statement\*\*|Problem Statement:|## Problem.*?)\s*\n+([\s\S]*?)(?=\n\*\*[A-Z]|\n##|Proposed Solution|$)/i);
+      if (problemMatch) {
+        sections.problem = problemMatch[1].trim();
+      }
+
+      // Parse Proposed Solution
+      const solutionMatch = response.match(/(?:\*\*Proposed Solution\*\*|Proposed Solution:|## Proposed Solution|## Solution.*?)\s*\n+([\s\S]*?)(?=\n\*\*[A-Z]|\n##|Success Metrics|$)/i);
+      if (solutionMatch) {
+        sections.solution = solutionMatch[1].trim();
+      }
+
+      // Parse Success Metrics
+      const metricsMatch = response.match(/(?:\*\*Success Metrics\*\*|Success Metrics:|## Metrics.*?)\s*\n+([\s\S]*?)(?=\n\*\*[A-Z]|\n##|Risks|$)/i);
+      if (metricsMatch) {
+        sections.metrics = metricsMatch[1].trim();
+      }
+
+      // Parse Risks & Assumptions - handle various formats
+      const risksMatch = response.match(/(?:\*\*Risks.*?\*\*|Risks.*?:|## Risks.*?)\s*\n+([\s\S]*?)(?=\n\*\*[A-Z]|\n##|$)/i);
+      if (risksMatch) {
+        sections.risks = risksMatch[1].trim();
+      }
+
+      // Parse Overview if present
+      const overviewMatch = response.match(/(?:\*\*Overview\*\*|Overview:|## Overview.*?)\s*\n+([\s\S]*?)(?=\n\*\*[A-Z]|\n##|Problem Statement|$)/i);
+      if (overviewMatch) {
+        sections.overview = overviewMatch[1].trim();
+      }
+
+      // Update PRD with all parsed sections
+      if (Object.keys(sections).length > 0) {
+        const updatedSections = { ...currentPRD.sections };
+
+        for (const [key, content] of Object.entries(sections)) {
+          if (updatedSections[key]) {
+            updatedSections[key] = {
+              ...updatedSections[key],
+              content: content,
+              lastUpdated: new Date().toISOString(),
+              updatedBy: 'AI Assistant'
+            };
+          }
+        }
+
+        const updatedPRD = {
+          ...currentPRD,
+          sections: updatedSections
+        };
+
+        setCurrentPRD(updatedPRD);
+
+        // Save to project
+        if (currentProject) {
+          useStore.getState().updateProject(currentProject.id, {
+            prd: updatedPRD,
+            status: 'active'
+          });
+        }
+
+        console.log('PRD sections updated:', Object.keys(sections));
+        return;
+      }
+    }
+
+    // Fall back to original keyword-based detection for single sections
     const message = userMessage.toLowerCase();
     let targetSection = null;
-    
+
     // Map keywords to PRD sections
     const sectionKeywords = {
       overview: ['overview', 'product overview', 'define the product', 'product description'],
-      goals: ['goals', 'metrics', 'success', 'kpi', 'objectives'],
-      businessObjectives: ['business', 'roi', 'revenue', 'cost'],
-      strategicFit: ['strategy', 'strategic', 'competitive', 'market'],
-      userStories: ['user stories', 'user story', 'stories', 'scenarios'],
-      userDesign: ['design', 'ui', 'ux', 'interaction', 'user experience'],
-      scope: ['scope', 'boundaries', 'mvp', 'out of scope'],
-      requirements: ['requirements', 'functional', 'features'],
-      technicalSpecs: ['technical', 'api', 'data', 'integration'],
-      timeline: ['timeline', 'milestones', 'schedule', 'deadline']
+      problem: ['problem', 'issue', 'challenge', 'pain point'],
+      solution: ['solution', 'solve', 'approach', 'proposal'],
+      metrics: ['metrics', 'success', 'kpi', 'measure', 'goals'],
+      risks: ['risk', 'assumption', 'concern', 'challenge']
     };
-    
+
     // Find which section to update
     for (const [section, keywords] of Object.entries(sectionKeywords)) {
       if (keywords.some(keyword => message.includes(keyword))) {
@@ -579,7 +725,7 @@ Try asking about specific sections like "How do I write user stories?" or "What 
         break;
       }
     }
-    
+
     // If we identified a section, update it
     if (targetSection && currentPRD?.sections?.[targetSection]) {
       const updatedPRD = {
@@ -594,14 +740,14 @@ Try asking about specific sections like "How do I write user stories?" or "What 
           }
         }
       };
-      
+
       setCurrentPRD(updatedPRD);
-      
+
       // Save to project if there's an active project
       if (currentProject) {
         useStore.getState().savePRDToProject();
       }
-      
+
       console.log(`PRD section '${targetSection}' updated with AI-generated content`);
     } else if (message.includes('help me') && (message.includes('my project') || message.includes('my product'))) {
       // User is describing their project - update overview
@@ -690,32 +836,53 @@ Try asking about specific sections like "How do I write user stories?" or "What 
       </MiddlePane>
 
       <RightPane>
-        <Header>
-          <Title>📝 PRD Editor</Title>
-          <Subtitle>
-            {currentProject ? currentProject.name : 'Select a project to begin'}
-          </Subtitle>
-        </Header>
-        {currentProject && currentPRD ? (
-          <PRDEditor />
-        ) : currentProject ? (
-          <div style={{ 
-            padding: '3rem', 
-            textAlign: 'center', 
-            color: '#999' 
-          }}>
-            <h3>Loading PRD...</h3>
-            <p>Initializing PRD template for {currentProject.name}</p>
-          </div>
+        <TabContainer>
+          <Tab
+            active={rightPaneTab === 'prd'}
+            onClick={() => setRightPaneTab('prd')}
+          >
+            📝 PRD Editor
+          </Tab>
+          <Tab
+            active={rightPaneTab === 'specification'}
+            onClick={() => setRightPaneTab('specification')}
+          >
+            🔧 Specification
+          </Tab>
+        </TabContainer>
+
+        {rightPaneTab === 'prd' ? (
+          <>
+            <Header>
+              <Title>📝 PRD Editor</Title>
+              <Subtitle>
+                {currentProject ? currentProject.name : 'Select a project to begin'}
+              </Subtitle>
+            </Header>
+            {currentProject && currentPRD ? (
+              <PRDEditor />
+            ) : currentProject ? (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#999'
+              }}>
+                <h3>Loading PRD...</h3>
+                <p>Initializing PRD template for {currentProject.name}</p>
+              </div>
+            ) : (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#999'
+              }}>
+                <h3>No Project Selected</h3>
+                <p>Select or create a project from the left panel to start working on a PRD</p>
+              </div>
+            )}
+          </>
         ) : (
-          <div style={{ 
-            padding: '3rem', 
-            textAlign: 'center', 
-            color: '#999' 
-          }}>
-            <h3>No Project Selected</h3>
-            <p>Select or create a project from the left panel to start working on a PRD</p>
-          </div>
+          <SpecificationView />
         )}
       </RightPane>
     </AppContainer>

@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test PRD Fix</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .section { margin: 20px 0; padding: 15px; border: 1px solid #ddd; border-radius: 8px; }
+        .success { background: #d4edda; border-color: #c3e6cb; }
+        .error { background: #f8d7da; border-color: #f5c6cb; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+        pre { background: #f4f4f4; padding: 10px; overflow-x: auto; }
+    </style>
+</head>
+<body>
+    <h1>Test PRD Content Saving Fix</h1>
+
+    <div class="section">
+        <h2>Test Steps:</h2>
+        <ol>
+            <li>Create a new project</li>
+            <li>Generate FitTracker PRD in chat</li>
+            <li>Check if PRD sections are automatically populated</li>
+            <li>Verify specification assessment can read the content</li>
+        </ol>
+    </div>
+
+    <div class="section">
+        <h2>Expected Behavior:</h2>
+        <ul>
+            <li>✅ PRD response should be detected as multi-section content</li>
+            <li>✅ Problem Statement should be extracted and saved</li>
+            <li>✅ Proposed Solution should be extracted and saved</li>
+            <li>✅ Success Metrics should be extracted and saved</li>
+            <li>✅ Risks & Assumptions should be extracted and saved</li>
+            <li>✅ Specification View should see the saved content</li>
+        </ul>
+    </div>
+
+    <div class="section">
+        <h2>Manual Test Instructions:</h2>
+        <p><strong>Step 1:</strong> Open the app at <a href="http://localhost:3000" target="_blank">http://localhost:3000</a></p>
+        <p><strong>Step 2:</strong> Create a new project called "FitTracker Test"</p>
+        <p><strong>Step 3:</strong> In the chat, type: "I want to build a fitness tracking mobile app called FitTracker"</p>
+        <p><strong>Step 4:</strong> After the PRD is generated, click on the "PRD Editor" tab</p>
+        <p><strong>Step 5:</strong> Verify that the sections contain the generated content</p>
+        <p><strong>Step 6:</strong> Go to the "Specification" tab and verify it can assess the PRD</p>
+    </div>
+
+    <div class="section">
+        <h2>Console Check:</h2>
+        <p>Open browser console (F12) and look for:</p>
+        <pre>Detected full PRD response, parsing sections...
+PRD sections updated: problem, solution, metrics, risks</pre>
+    </div>
+
+    <script>
+        console.log('Test page loaded. Follow the manual test instructions above.');
+    </script>
+</body>
+</html>

@@ -1,0 +1,115 @@
+{
+  "name": "System Design Specification",
+  "templateType": "system-design",
+  "description": "Comprehensive specification for complex distributed systems",
+  "sections": {
+    "systemArchitecture": {
+      "title": "System Architecture",
+      "description": "Overall system design and architecture",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the overall system architecture?",
+        "What are the architectural patterns used?",
+        "How do services communicate?",
+        "What are the system boundaries?"
+      ]
+    },
+    "serviceBoundaries": {
+      "title": "Service Boundaries",
+      "description": "Microservices or module boundaries and responsibilities",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What services will be created?",
+        "What are each service's responsibilities?",
+        "How are services decoupled?",
+        "What are the service contracts?"
+      ]
+    },
+    "dataFlow": {
+      "title": "Data Flow",
+      "description": "How data moves through the system",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How does data flow through the system?",
+        "What are the data pipelines?",
+        "How is data transformed?",
+        "What are the data consistency requirements?"
+      ]
+    },
+    "scalabilityDesign": {
+      "title": "Scalability Design",
+      "description": "How the system scales to meet demand",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How will the system scale horizontally?",
+        "What are the bottlenecks?",
+        "Load balancing strategy?",
+        "Caching strategy?"
+      ]
+    },
+    "reliabilityDesign": {
+      "title": "Reliability & Fault Tolerance",
+      "description": "System reliability and failure handling",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the failure modes?",
+        "How is fault tolerance achieved?",
+        "What's the disaster recovery plan?",
+        "What are the SLA requirements?"
+      ]
+    },
+    "monitoringStrategy": {
+      "title": "Monitoring & Observability",
+      "description": "System monitoring and debugging approach",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What metrics will be monitored?",
+        "What logging strategy will be used?",
+        "How will distributed tracing work?",
+        "What are the alerting thresholds?"
+      ]
+    },
+    "networkDesign": {
+      "title": "Network Design",
+      "description": "Network topology and communication patterns",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "Network topology?",
+        "Communication protocols?",
+        "Load balancing approach?",
+        "CDN strategy?"
+      ]
+    },
+    "securityArchitecture": {
+      "title": "Security Architecture",
+      "description": "Security layers and mechanisms",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Authentication and authorization flow?",
+        "Network security measures?",
+        "Data encryption approach?",
+        "Security compliance requirements?"
+      ]
+    },
+    "costAnalysis": {
+      "title": "Cost Analysis",
+      "description": "Infrastructure and operational costs",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "Infrastructure costs?",
+        "Operational costs?",
+        "Cost optimization strategies?",
+        "Budget constraints?"
+      ]
+    }
+  }
+}

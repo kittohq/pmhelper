@@ -1,0 +1,266 @@
+
+I want to build a fitness tracking mobile app called "FitTracker".
+
+  Key details:
+  - Target users: fitness enthusiasts and beginners starting their wellness journey
+  - Main features: workout tracking, nutrition logging, wearable device integration
+  - Platform: iOS first, then Android
+  - Revenue model: freemium with premium subscriptions
+  - Goal: 100K downloads in 6 months, break-even by month 12
+  - Differentiator: AI-powered coaching and seamless device sync
+
+  Please help me create a comprehensive PRD for this mobile fitness app.
+
+==
+
+Recommended Engineering Manager Notes & Technical Constraints:
+
+  Team & Resources:
+  - Team: 2 senior mobile devs, 1 backend engineer, 1 DevOps engineer, 1 QA
+  - Timeline: 4 months to MVP, 6 months to full launch
+  - Budget: $250K for development + $50K for infrastructure first year
+
+  Technology Stack:
+  - Mobile: React Native (for iOS/Android code sharing)
+  - Backend: Node.js with Express, PostgreSQL database
+  - Infrastructure: AWS (EC2, RDS, S3 for media storage)
+  - Authentication: Auth0 or Firebase Auth
+  - Analytics: Mixpanel for user analytics, Sentry for error tracking
+
+
+Technical Requirements:
+  - Performance: App launch <2s, API response <500ms for 95th percentile
+  - Offline support: Core features (workout tracking) must work offline
+  - Data sync: Background sync when connection restored
+  - Battery optimization: <5% battery drain during 1-hour workout
+  - Storage: <100MB app size, efficient local data caching
+
+  Integration Requirements:
+  - Apple HealthKit and Google Fit mandatory
+  - Fitbit, Garmin, Whoop APIs for wearables
+  - Stripe for payment processing
+  - Push notifications via Firebase Cloud Messaging
+  - Social sharing to Instagram/Facebook
+
+  Security & Compliance:
+  - HIPAA compliance for health data
+  - GDPR compliance for EU users
+  - End-to-end encryption for sensitive health data
+  - SOC 2 Type II certification required by year 2
+  - PCI DSS compliance for payment processing
+
+
+Scalability Requirements:
+  - Support 100K concurrent users by month 6
+  - 1M users by end of year 1
+  - Auto-scaling infrastructure
+  - CDN for global content delivery
+  - Database sharding strategy needed
+
+  Development Constraints:
+  - Must use existing company CI/CD pipeline (Jenkins)
+  - Follow company mobile app architecture patterns
+  - Integrate with existing user management system
+  - Reuse company's design system components
+
+
+- Weekly releases to TestFlight/Play Console beta
+
+  Quality Requirements:
+  - 99.9% uptime SLA
+  - Crash-free rate >99.5%
+  - Test coverage >80%
+  - Accessibility: WCAG 2.1 AA compliance
+  - Support iOS 14+ and Android 8+
+
+  Dependencies:
+  - Marketing team needs app 2 weeks before launch for campaigns
+  - Legal review required for terms of service
+  - App Store/Play Store review time (~1 week each)
+  - Third-party API contracts need negotiation (2-3 weeks)
+
+
+Why These Notes Work Well:
+
+  1. Specific Technical Choices: Instead of "we need a database," specify
+  "PostgreSQL"
+  2. Quantifiable Metrics: "API response <500ms" instead of "fast performance"
+  3. Team Context: The LLM knows exactly what expertise is available
+  4. Constraints: Real-world limitations that affect architecture decisions
+  5. Dependencies: External factors that impact technical design
+
+  What the LLM Sees:
+
+  Yes, when generating the specification, the LLM receives:
+  1. The complete PRD (all sections you filled)
+  2. Your engineering notes
+  3. The specification template structure
+  4. Previous conversation context (if any)
+
+  This allows it to create a specification that:
+  - Aligns with business goals from the PRD
+  - Respects technical constraints from engineering notes
+  - Follows the selected template format
+  - Makes concrete technology recommendations
+
+  The more specific your engineering notes, the more detailed and actionable the
+  specification will be. The LLM will translate the business requirements from the
+   PRD into technical implementation details based on your constraints.
+
+
+Here are the additional details you requested:
+
+  RISKS & ASSUMPTIONS:
+
+ - Assume users will manually log data initially and pay $9.99/month premium
+  - Risk: Device integration complexity may delay MVP 4-6 weeks
+  - Risk: User acquisition costs may exceed $15/install
+  - Mitigation: Build modular architecture, progressive feature rollout
+
+  ACCEPTANCE CRITERIA:
+  - Workout logging must save/sync within 30 seconds
+  - Barcode scanning must return results within 3 seconds
+  - Device sync must complete within 60 seconds for 7 days data
+  - App must work offline for core logging features
+
+  UI/UX REQUIREMENTS:
+  - Follow iOS/Material Design guidelines with dark mode support
+  - Support accessibility (VoiceOver, high contrast, haptic feedback)
+  - App launch under 3 seconds, screen transitions under 300ms
+  - Progressive onboarding with smart defaults and minimal data entry
+
+  Please generate the complete PRD now with all sections filled out.
+
+  This should give the AI everything it needs to create a comprehensive, production-ready PRD
+  document with all the missing sections properly detailed.
+
+
+==
+  Project Title: "FitTracker Mobile App"
+
+  Product Overview
+
+  FitTracker is a comprehensive fitness tracking mobile application that helps users monitor
+
+ FitTracker is a comprehensive fitness tracking mobile application that helps users monitor
+  their workouts, nutrition, and health metrics. The app will integrate with popular wearables
+  and provide personalized insights to help users achieve their fitness goals.
+
+  Target users include fitness enthusiasts, people starting their wellness journey, and
+  individuals looking to maintain healthy habits. The app differentiates itself through
+  AI-powered coaching and seamless device integration.
+
+  Goals & Success Metrics
+
+  Primary Goals:
+  - Achieve 100K app downloads in first 6 months
+  - Maintain 70% user retention after 30 days
+  - Average session duration of 8+ minutes
+  - 4.5+ star rating on app stores
+
+  Key Metrics:
+  - Daily Active Users (DAU): 15K by month 6
+  - Monthly Active Users (MAU): 60K by month 6
+  - In-app purchases conversion: 15% of users
+  - Workout completion rate: 75%
+
+  Business Objectives
+
+  Revenue Goals:
+  - Generate $500K ARR through premium subscriptions
+  - Achieve break-even by month 12
+  - Premium conversion rate of 20%
+
+ Strategic Objectives:
+  - Establish FitTracker as top 10 fitness app in category
+  - Build foundation for corporate wellness partnerships
+  - Create data insights for future product expansion
+
+  User Stories
+
+  Epic 1: Workout Tracking
+  - As a fitness enthusiast, I want to log my workouts so I can track my progress over time
+  - As a beginner, I want guided workout suggestions so I can start exercising safely
+  - As a user, I want to see my workout history so I can identify patterns
+
+  Epic 2: Health Monitoring
+  - As a user, I want to connect my fitness tracker so my data syncs automatically
+  - As a health-conscious person, I want to track my heart rate during workouts
+  - As a user, I want to log my weight and measurements to monitor body changes
+
+  Epic 3: Nutrition Tracking
+  - As a user, I want to scan barcodes to quickly log meals
+  - As someone watching calories, I want to see my daily intake vs goals
+  - As a user, I want meal suggestions that fit my dietary preferences
+
+ Functional Requirements
+
+  Core Features:
+  1. User Registration & Profile Management
+     - Email/social login authentication
+     - Personal fitness goals setup
+     - Height, weight, age input
+
+  2. Workout Tracking
+     - Exercise library (150+ exercises)
+     - Custom workout creation
+     - Rest timer and interval tracking
+     - Progress photos
+
+  3. Health Metrics Dashboard
+     - Weight tracking with visual charts
+     - Body measurements logging
+     - Heart rate integration
+     - Sleep quality tracking
+
+  4. Nutrition Logging
+     - Barcode scanning for food items
+     - Manual food entry
+     - Calorie and macro tracking
+     - Meal photo logging
+
+  5. Device Integration
+     - Apple Health/Google Fit sync
+     - Fitbit, Garmin, Apple Watch support
+     - Automatic step counting
+     - Heart rate monitoring
+
+  Timeline & Milestones
+Phase 1 - MVP (Months 1-3):
+  - User authentication and profiles
+  - Basic workout logging
+  - Weight tracking
+  - iOS app release
+
+  Phase 2 - Enhanced Features (Months 4-5):
+  - Nutrition tracking with barcode scanning
+  - Device integrations (Apple Health, Fitbit)
+  - Android app release
+  - Basic analytics dashboard
+
+  Phase 3 - Advanced Features (Months 6-8):
+  - AI-powered workout recommendations
+  - Social features (friends, challenges)
+  - Premium subscription tier
+  - Advanced reporting
+
+  Phase 4 - Growth (Months 9-12):
+  - Corporate wellness features
+  - API for third-party integrations
+  - Advanced nutrition insights
+  - Expansion to web platform
+
+⏺  This example shows realistic PRD content for a fitness app project. You can copy and paste
+  these sections into your PM Helper app to see how a complete PRD looks. The content includes:
+
+  - Specific metrics (100K downloads, 70% retention, $500K ARR)
+  - Detailed user stories organized by epic
+  - Technical requirements with specific features
+  - Realistic timeline with phased approach over 12 months
+  - Business context connecting features to revenue goals
+
+
+ When you create a new project in your app, try using "FitTracker Mobile App" as the project
+  name and paste these sections to see how the validation works and how the AI assistant responds
+   to complete vs. incomplete sections.
+
