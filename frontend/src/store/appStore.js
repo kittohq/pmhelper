@@ -38,6 +38,20 @@ export const useStore = create(
         currentProject: project,
         currentPRD: project?.prd || null
       }),
+      selectProject: (projectId) => {
+        const state = get();
+        const project = state.projects.find(p => p.id === projectId);
+        if (project) {
+          set({ 
+            currentProject: project,
+            currentPRD: project.prd || null
+          });
+        }
+      },
+      createProject: (name) => {
+        const state = get();
+        return state.addProject({ name });
+      },
 
       // Documents for context
       documents: [],
@@ -92,7 +106,7 @@ export const useStore = create(
       },
 
       // UI state
-      activeView: 'projects',
+      activeView: 'chat',
       setActiveView: (view) => set({ activeView: view }),
       activeSection: 'overview',
       setActiveSection: (section) => set({ activeSection: section }),
