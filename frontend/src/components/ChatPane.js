@@ -181,7 +181,7 @@ const LoadingIndicator = styled.div`
 `;
 
 function ChatPane({ onSendMessage }) {
-  const { messages, currentPRD } = useStore();
+  const { messages, currentPRD, currentProject } = useStore();
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const messagesEndRef = useRef(null);
@@ -235,10 +235,34 @@ function ChatPane({ onSendMessage }) {
         {messages.length === 0 && (
           <EmptyState>
             <Bot size={48} style={{ marginBottom: '1rem', opacity: 0.3 }} />
-            <p>Start a conversation about your PRD</p>
-            <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
-              I'll help you create and refine your Product Requirements Document
-            </p>
+            {!currentProject ? (
+              <>
+                <p style={{ color: '#f59e0b', fontWeight: 'bold' }}>⚠️ No Project Selected</p>
+                <p style={{ fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  Please create or select a project with a PRD template first
+                </p>
+                <p style={{ fontSize: '0.85rem', marginTop: '1rem', color: '#666' }}>
+                  Click "New Project" in the left panel to get started
+                </p>
+              </>
+            ) : (
+              <>
+                <p>Ready to create your PRD!</p>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem', color: '#666' }}>
+                  Template: <strong>{currentProject.templateType || 'lean'}</strong>
+                </p>
+                <p style={{ fontSize: '0.85rem', marginTop: '0.5rem' }}>
+                  To start, provide these 5 essential details:
+                </p>
+                <div style={{ textAlign: 'left', marginTop: '1rem', fontSize: '0.85rem', color: '#555' }}>
+                  <div>☐ Product/Feature Name</div>
+                  <div>☐ Problem Statement</div>
+                  <div>☐ Target Users</div>
+                  <div>☐ Core Functionality (2-3 features)</div>
+                  <div>☐ Success Metric</div>
+                </div>
+              </>
+            )}
           </EmptyState>
         )}
 

@@ -1,0 +1,86 @@
+{
+  "name": "Agile/Scrum PRD Template",
+  "templateType": "agile",
+  "description": "User story-focused PRD with acceptance criteria for agile teams",
+  "sections": {
+    "vision": {
+      "title": "Product Vision",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What is the product vision?",
+        "Who are the target users?",
+        "What value does this deliver?",
+        "How does this align with company goals?"
+      ]
+    },
+    "epics": {
+      "title": "Epics & Themes",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the main epics?",
+        "How do epics relate to each other?",
+        "What is the priority order?",
+        "What themes do they represent?"
+      ]
+    },
+    "userStories": {
+      "title": "User Stories",
+      "content": "",
+      "required": true,
+      "template": "As a [user type], I want to [action] so that [benefit]",
+      "prompts": [
+        "Who is the user?",
+        "What do they want to do?",
+        "Why do they want to do it?",
+        "What is the business value?"
+      ]
+    },
+    "acceptanceCriteria": {
+      "title": "Acceptance Criteria",
+      "content": "",
+      "required": true,
+      "template": "GIVEN [context] WHEN [action] THEN [outcome]",
+      "prompts": [
+        "What are the acceptance criteria?",
+        "How will we know it's done?",
+        "What are the edge cases?",
+        "What are the test scenarios?"
+      ]
+    },
+    "definitionOfDone": {
+      "title": "Definition of Done",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Code reviewed and approved?",
+        "Unit tests written and passing?",
+        "Documentation updated?",
+        "Deployed to staging?"
+      ]
+    },
+    "sprintPlanning": {
+      "title": "Sprint Planning",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "What goes in Sprint 1?",
+        "What are the sprint goals?",
+        "What are the dependencies?",
+        "What is the velocity estimate?"
+      ]
+    },
+    "technicalDebt": {
+      "title": "Technical Debt & Risks",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "What technical debt exists?",
+        "What are the technical risks?",
+        "What needs refactoring?",
+        "What are the performance concerns?"
+      ]
+    }
+  }
+}

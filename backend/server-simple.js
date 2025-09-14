@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 const path = require('path');
+const axios = require('axios');
 const { generatePRD, prdPrompts } = require('./templates/prd-template');
 const { prdTemplates } = require('./templates/prd-templates');
 require('dotenv').config();
@@ -8,8 +9,13 @@ require('dotenv').config();
 const app = express();
 const PORT = process.env.PORT || 3000;
 
-// Middleware
-app.use(cors());
+// Middleware with proper CORS configuration
+app.use(cors({
+  origin: ['http://localhost:3000', 'http://localhost:3001', 'http://localhost:3002'],
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+}));
 app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -122,6 +128,54 @@ app.post('/api/v1/generate/prd', (req, res) => {
       suggestions: prd.aiSuggestions
     }
   });
+});
+
+// Proxy endpoint for Ollama to avoid CORS issues
+app.post('/api/ollama/generate', async (req, res) => {
+  try {
+    console.log('Ollama generate request received:', {
+      model: req.body.model,
+      promptLength: req.body.prompt?.length,
+      stream: req.body.stream
+    });
+    
+    const response = await axios.post('http://127.0.0.1:11434/api/generate', req.body, {
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      timeout: 300000 // 5 minute timeout for complex PRD generation
+    });
+    
+    console.log('Ollama response received, length:', response.data.response?.length || 0);
+    res.json(response.data);
+  } catch (error) {
+    console.error('Ollama proxy error:', error.message);
+    
+    if (error.code === 'ECONNABORTED') {
+      res.status(504).json({ 
+        error: 'Request timeout',
+        message: 'Ollama is taking too long to respond. Try a simpler prompt or check if Ollama is running properly.' 
+      });
+    } else {
+      res.status(500).json({ 
+        error: 'Failed to connect to Ollama',
+        message: error.message 
+      });
+    }
+  }
+});
+
+app.get('/api/ollama/tags', async (req, res) => {
+  try {
+    const response = await axios.get('http://127.0.0.1:11434/api/tags');
+    res.json(response.data);
+  } catch (error) {
+    console.error('Ollama tags error:', error.message);
+    res.status(500).json({ 
+      error: 'Failed to get Ollama models',
+      message: error.message 
+    });
+  }
 });
 
 // Start server

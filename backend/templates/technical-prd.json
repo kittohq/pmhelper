@@ -1,0 +1,95 @@
+{
+  "name": "Technical PRD Template",
+  "templateType": "technical",
+  "description": "Engineering-focused PRD with technical specifications",
+  "sections": {
+    "technicalOverview": {
+      "title": "Technical Overview",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the high-level architecture?",
+        "What are the main components?",
+        "What technologies will we use?",
+        "What are the system boundaries?"
+      ]
+    },
+    "apiDesign": {
+      "title": "API Design",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What endpoints are needed?",
+        "What's the data model?",
+        "What are the request/response formats?",
+        "How do we handle errors?"
+      ]
+    },
+    "dataModel": {
+      "title": "Data Model",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What entities exist?",
+        "What are the relationships?",
+        "What's the schema?",
+        "How do we handle migrations?"
+      ]
+    },
+    "systemDesign": {
+      "title": "System Design",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the architecture diagram?",
+        "How do components communicate?",
+        "What are the data flows?",
+        "What are the failure modes?"
+      ]
+    },
+    "performance": {
+      "title": "Performance Requirements",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the latency requirements?",
+        "What's the expected load?",
+        "What are the SLAs?",
+        "How do we scale?"
+      ]
+    },
+    "security": {
+      "title": "Security Considerations",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How do we authenticate users?",
+        "How do we authorize actions?",
+        "What data needs encryption?",
+        "What are the compliance requirements?"
+      ]
+    },
+    "testing": {
+      "title": "Testing Strategy",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the testing approach?",
+        "What are the test scenarios?",
+        "How do we test at scale?",
+        "What's the rollback plan?"
+      ]
+    },
+    "deployment": {
+      "title": "Deployment Plan",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "How do we deploy?",
+        "What's the rollout strategy?",
+        "How do we monitor?",
+        "What are the alerts?"
+      ]
+    }
+  }
+}

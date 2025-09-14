@@ -1,0 +1,75 @@
+{
+  "name": "Amazon Working Backwards PRD Template",
+  "templateType": "amazon",
+  "description": "Working backwards from press release and customer experience",
+  "sections": {
+    "pressRelease": {
+      "title": "Press Release",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Write the future press release",
+        "What's the headline?",
+        "What customer quote would you include?",
+        "What's the key benefit?"
+      ]
+    },
+    "faq": {
+      "title": "Internal FAQ",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Why are we building this?",
+        "Why now?",
+        "What's the TAM?",
+        "How does this help customers?",
+        "What are the risks?",
+        "How will we measure success?"
+      ]
+    },
+    "customerExperience": {
+      "title": "Customer Experience",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Walk through the customer journey",
+        "What does day 1 look like?",
+        "What does day 30 look like?",
+        "What delights the customer?"
+      ]
+    },
+    "workingBackwards": {
+      "title": "Working Backwards",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Start with the customer need",
+        "What's the ideal experience?",
+        "What constraints exist?",
+        "What can we remove?"
+      ]
+    },
+    "tenets": {
+      "title": "Product Tenets",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What principles guide decisions?",
+        "What trade-offs will we make?",
+        "What won't we compromise on?",
+        "How do we resolve conflicts?"
+      ]
+    },
+    "mechanisms": {
+      "title": "Mechanisms",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "What processes ensure quality?",
+        "How do we prevent regression?",
+        "What are the operational metrics?",
+        "How do we scale?"
+      ]
+    }
+  }
+}

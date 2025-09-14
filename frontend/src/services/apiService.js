@@ -2,7 +2,7 @@ import axios from 'axios';
 
 class ApiService {
   constructor() {
-    this.baseURL = 'http://localhost:3000/api';
+    this.baseURL = 'http://localhost:3003/api';
   }
 
   async getPRDTemplate(type = 'basic') {

@@ -1,0 +1,84 @@
+{
+  "name": "Startup PRD Template",
+  "templateType": "startup",
+  "description": "Hypothesis-driven PRD for rapid iteration and MVP development",
+  "sections": {
+    "hypothesis": {
+      "title": "Core Hypothesis",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What is our core hypothesis?",
+        "What behavior change do we expect?",
+        "How will we validate this?",
+        "What happens if we're wrong?"
+      ]
+    },
+    "problemMarketFit": {
+      "title": "Problem-Market Fit",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What problem are we solving?",
+        "How big is the market?",
+        "Who are the early adopters?",
+        "What's the pain level (1-10)?"
+      ]
+    },
+    "mvpDefinition": {
+      "title": "MVP Definition",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the absolute minimum to test our hypothesis?",
+        "What can we build in 2-4 weeks?",
+        "What existing tools can we leverage?",
+        "What manual processes can we use initially?"
+      ]
+    },
+    "experiments": {
+      "title": "Experiments & Learning",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What experiments will we run?",
+        "What are we trying to learn?",
+        "How will we measure results?",
+        "What are the success criteria?"
+      ]
+    },
+    "customerDiscovery": {
+      "title": "Customer Discovery",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Who have we talked to?",
+        "What did we learn?",
+        "What surprised us?",
+        "What patterns emerged?"
+      ]
+    },
+    "pivotCriteria": {
+      "title": "Pivot Criteria",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "When would we pivot?",
+        "What metrics trigger a pivot?",
+        "What are alternative approaches?",
+        "What's our runway?"
+      ]
+    },
+    "growthStrategy": {
+      "title": "Growth Strategy",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "How will we acquire first 10 customers?",
+        "How will we get to 100?",
+        "What's our viral coefficient?",
+        "What are our unit economics?"
+      ]
+    }
+  }
+}

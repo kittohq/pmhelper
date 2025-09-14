@@ -1,0 +1,117 @@
+{
+  "name": "Enterprise PRD Template",
+  "templateType": "enterprise",
+  "description": "Comprehensive PRD for large-scale enterprise projects",
+  "sections": {
+    "executiveSummary": {
+      "title": "Executive Summary",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the business case?",
+        "What's the expected ROI?",
+        "What are the key benefits?",
+        "What's the timeline and budget?"
+      ]
+    },
+    "businessContext": {
+      "title": "Business Context",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the market opportunity?",
+        "Who are the competitors?",
+        "What's our competitive advantage?",
+        "How does this align with strategy?"
+      ]
+    },
+    "stakeholders": {
+      "title": "Stakeholders",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Who are the stakeholders?",
+        "What are their interests?",
+        "Who is the sponsor?",
+        "Who are the decision makers?"
+      ]
+    },
+    "requirements": {
+      "title": "Detailed Requirements",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the functional requirements?",
+        "What are the non-functional requirements?",
+        "What are the compliance requirements?",
+        "What are the integration requirements?"
+      ]
+    },
+    "architecture": {
+      "title": "Solution Architecture",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the enterprise architecture?",
+        "How does it integrate with existing systems?",
+        "What are the data flows?",
+        "What are the security considerations?"
+      ]
+    },
+    "governance": {
+      "title": "Governance & Compliance",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the regulatory requirements?",
+        "What are the data privacy considerations?",
+        "What are the audit requirements?",
+        "What are the compliance checkpoints?"
+      ]
+    },
+    "riskManagement": {
+      "title": "Risk Management",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the project risks?",
+        "What's the risk mitigation plan?",
+        "What are the contingency plans?",
+        "What's the disaster recovery plan?"
+      ]
+    },
+    "implementation": {
+      "title": "Implementation Plan",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the phased rollout plan?",
+        "What are the milestones?",
+        "What are the dependencies?",
+        "What's the resource plan?"
+      ]
+    },
+    "changeManagement": {
+      "title": "Change Management",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How will we manage organizational change?",
+        "What's the training plan?",
+        "What's the communication plan?",
+        "How do we ensure adoption?"
+      ]
+    },
+    "successMetrics": {
+      "title": "Success Metrics & KPIs",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the success criteria?",
+        "What are the KPIs?",
+        "How will we measure ROI?",
+        "What are the quality metrics?"
+      ]
+    }
+  }
+}

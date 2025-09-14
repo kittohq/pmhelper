@@ -7,14 +7,21 @@ export const useStore = create(
       // Projects management
       projects: [],
       currentProject: null,
-      addProject: (project) => set((state) => ({
-        projects: [...state.projects, { 
+      addProject: (project) => {
+        const newProject = { 
           id: Date.now(), 
           ...project,
+          prd: project.prd || null,
           createdAt: new Date().toISOString(),
           lastModified: new Date().toISOString()
-        }]
-      })),
+        };
+        set((state) => ({
+          projects: [...state.projects, newProject],
+          currentProject: newProject,
+          currentPRD: newProject.prd
+        }));
+        return newProject;
+      },
       updateProject: (projectId, updates) => set((state) => ({
         projects: state.projects.map(p => 
           p.id === projectId 
@@ -24,9 +31,13 @@ export const useStore = create(
       })),
       deleteProject: (projectId) => set((state) => ({
         projects: state.projects.filter(p => p.id !== projectId),
-        currentProject: state.currentProject?.id === projectId ? null : state.currentProject
+        currentProject: state.currentProject?.id === projectId ? null : state.currentProject,
+        currentPRD: state.currentProject?.id === projectId ? null : state.currentPRD
       })),
-      setCurrentProject: (project) => set({ currentProject: project }),
+      setCurrentProject: (project) => set({ 
+        currentProject: project,
+        currentPRD: project?.prd || null
+      }),
 
       // Documents for context
       documents: [],
@@ -75,7 +86,9 @@ export const useStore = create(
             prd: state.currentPRD,
             status: 'active'
           });
+          return true;
         }
+        return false;
       },
 
       // UI state

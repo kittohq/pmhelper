@@ -1,0 +1,62 @@
+{
+  "name": "Lean PRD Template",
+  "templateType": "lean",
+  "description": "Minimalist PRD focused on problem, solution, and key metrics",
+  "sections": {
+    "problem": {
+      "title": "Problem Statement",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What specific problem are we solving?",
+        "Who experiences this problem?",
+        "What is the impact of not solving it?",
+        "How do users currently work around this?"
+      ]
+    },
+    "solution": {
+      "title": "Proposed Solution",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What is our proposed solution?",
+        "How does it solve the problem?",
+        "What are the key features?",
+        "What makes this better than alternatives?"
+      ]
+    },
+    "metrics": {
+      "title": "Success Metrics",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How will we measure success?",
+        "What are the target KPIs?",
+        "What is the definition of done?",
+        "How will we track adoption?"
+      ]
+    },
+    "mvp": {
+      "title": "MVP Scope",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What is the minimum viable product?",
+        "What features are must-have vs nice-to-have?",
+        "What can we ship in 4-6 weeks?",
+        "What will we explicitly NOT do?"
+      ]
+    },
+    "risks": {
+      "title": "Risks & Assumptions",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "What are the key risks?",
+        "What assumptions are we making?",
+        "What dependencies exist?",
+        "What could cause this to fail?"
+      ]
+    }
+  }
+}

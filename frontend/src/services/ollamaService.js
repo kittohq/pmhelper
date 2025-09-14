@@ -2,16 +2,28 @@ import axios from 'axios';
 
 class OllamaService {
   constructor() {
-    this.baseURL = 'http://localhost:11434';
-    this.model = 'mistral:7b-instruct'; // Using your Mistral model
+    // Use backend proxy to avoid CORS issues
+    this.baseURL = 'http://localhost:3003/api/ollama';
+    // Try to load saved model from localStorage, default to mistral
+    this.model = localStorage.getItem('ollamaModel') || 'mistral:7b-instruct';
+    this.isConnected = false;
+    this.availableModels = [];
+    // Check connection on initialization
+    this.checkConnection();
   }
 
   async checkConnection() {
     try {
-      const response = await axios.get(`${this.baseURL}/api/tags`);
-      return response.status === 200;
+      const response = await axios.get(`${this.baseURL}/tags`);
+      this.isConnected = response.status === 200;
+      if (this.isConnected && response.data?.models) {
+        this.availableModels = response.data.models;
+        console.log('Ollama connected! Available models:', this.availableModels.map(m => m.name));
+      }
+      return this.isConnected;
     } catch (error) {
       console.error('Ollama connection check failed:', error);
+      this.isConnected = false;
       return false;
     }
   }
@@ -49,27 +61,35 @@ class OllamaService {
       }
       console.log('===== OLLAMA REQUEST END =====');
       
-      // Add timeout and simplified prompt
+      // Add timeout - PRD generation can take up to 5 minutes for complex prompts
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 15000); // 15 second timeout
+      const timeoutId = setTimeout(() => controller.abort(), 300000); // 5 minute timeout
       
-      const response = await axios.post(`${this.baseURL}/api/generate`, {
+      const requestBody = {
         model: this.model,
         prompt: prompt,
         stream: false,
-        context: context,
         options: {
           temperature: 0.7,
           top_k: 40,
           top_p: 0.9,
-          num_predict: 500 // Increased for better responses
+          num_predict: 4096 // Increased to allow full PRD responses
         }
-      }, {
+      };
+      
+      // Don't send context if it's empty or just whitespace
+      if (context && context.trim()) {
+        requestBody.context = context;
+      }
+      
+      console.log('Sending request body:', requestBody);
+      
+      const response = await axios.post(`${this.baseURL}/generate`, requestBody, {
         headers: {
           'Content-Type': 'application/json'
         },
         signal: controller.signal,
-        timeout: 15000
+        timeout: 300000 // 5 minute timeout to match setTimeout
       });
 
       clearTimeout(timeoutId);
@@ -91,7 +111,7 @@ class OllamaService {
         throw new Error('Request timeout - Ollama is taking too long to respond');
       }
       
-      throw new Error('Ollama is not responding. Using fallback responses.');
+      throw error; // Throw the actual error instead of generic message
     }
   }
 
@@ -143,6 +163,21 @@ class OllamaService {
 
   setModel(modelName) {
     this.model = modelName;
+    // Save to localStorage for persistence
+    localStorage.setItem('ollamaModel', modelName);
+    console.log('Ollama model changed to:', modelName);
+  }
+
+  getCurrentModel() {
+    return this.model;
+  }
+
+  getConnectionStatus() {
+    return this.isConnected;
+  }
+
+  getAvailableModels() {
+    return this.availableModels;
   }
 
   async generatePRDSuggestions(prdSection, currentContent) {

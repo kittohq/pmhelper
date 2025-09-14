@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import styled from '@emotion/styled';
-import { Save, Download, RefreshCw, ChevronRight, ChevronDown, Sparkles } from 'lucide-react';
+import { Save, Download, RefreshCw, ChevronRight, ChevronDown, Sparkles, ChevronUp } from 'lucide-react';
 import { useStore } from '../store/appStore';
 import { ollamaService } from '../services/ollamaService';
 import toast from 'react-hot-toast';
+import TemplateSelector from './TemplateSelector';
 
 const Container = styled.div`
   flex: 1;
@@ -36,6 +37,27 @@ const ToolButton = styled.button`
   &:hover {
     background: #f0f0f0;
     border-color: #667eea;
+  }
+`;
+
+const TemplateBadge = styled.button`
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-left: auto;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
   }
 `;
 
@@ -195,9 +217,10 @@ const CompleteBadge = styled.span`
 `;
 
 function PRDEditor() {
-  const { currentPRD, setCurrentPRD, updatePRDSection, documents } = useStore();
+  const { currentPRD, setCurrentPRD, updatePRDSection, documents, savePRDToProject, currentProject } = useStore();
   const [expandedSections, setExpandedSections] = useState(['overview', 'objectives']);
   const [isGeneratingSuggestions, setIsGeneratingSuggestions] = useState({});
+  const [showTemplateSelector, setShowTemplateSelector] = useState(false);
 
   if (!currentPRD) {
     return (
@@ -253,14 +276,25 @@ function PRDEditor() {
   };
 
   const savePRD = () => {
-    const prdData = JSON.stringify(currentPRD, null, 2);
-    const blob = new Blob([prdData], { type: 'application/json' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `PRD_${currentPRD.title.replace(/\s+/g, '_')}_${Date.now()}.json`;
-    a.click();
-    toast.success('PRD saved successfully');
+    if (currentProject) {
+      // Save to project
+      const saved = savePRDToProject();
+      if (saved) {
+        toast.success('PRD saved to project');
+      } else {
+        toast.error('Failed to save PRD to project');
+      }
+    } else {
+      // Export as file if no project
+      const prdData = JSON.stringify(currentPRD, null, 2);
+      const blob = new Blob([prdData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `PRD_${currentPRD.title.replace(/\s+/g, '_')}_${Date.now()}.json`;
+      a.click();
+      toast.success('PRD exported successfully');
+    }
   };
 
   const exportMarkdown = () => {
@@ -321,6 +355,10 @@ function PRDEditor() {
           <RefreshCw size={16} />
           Analyze
         </ToolButton>
+        <TemplateBadge onClick={() => setShowTemplateSelector(true)}>
+          📋 Template: {currentPRD.templateName || 'Basic PRD'}
+          <ChevronUp size={14} />
+        </TemplateBadge>
       </Toolbar>
 
       <Content>
@@ -370,7 +408,7 @@ function PRDEditor() {
                 <TextArea
                   value={section.content || ''}
                   onChange={(e) => handleSectionChange(sectionKey, e.target.value)}
-                  placeholder={`Enter ${section.title.toLowerCase()} details...`}
+                  placeholder={`Enter ${section.title ? section.title.toLowerCase() : 'section'} details...`}
                 />
                 
                 {section.prompts && section.prompts.length > 0 && (
@@ -402,6 +440,11 @@ function PRDEditor() {
           {documents.length} context documents
         </span>
       </StatusBar>
+      
+      <TemplateSelector 
+        isOpen={showTemplateSelector} 
+        onClose={() => setShowTemplateSelector(false)} 
+      />
     </Container>
   );
 }

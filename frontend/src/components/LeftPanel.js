@@ -16,6 +16,7 @@ import { useStore } from '../store/appStore';
 import { apiService } from '../services/apiService';
 import toast from 'react-hot-toast';
 import NewProjectModal from './NewProjectModal';
+import ProjectManager from './ProjectManager';
 
 const Container = styled.div`
   display: flex;
@@ -315,55 +316,7 @@ function LeftPanel() {
       </NavSection>
 
       {activeView === 'projects' && (
-        <>
-          <SectionHeader>
-            Projects
-            <Plus 
-              size={16} 
-              style={{ cursor: 'pointer' }}
-              onClick={handleNewProject}
-            />
-          </SectionHeader>
-
-          <ProjectsSection>
-            <NewProjectButton onClick={handleNewProject}>
-              <Plus />
-              New Project
-            </NewProjectButton>
-
-            {(!projects || projects.length === 0) ? (
-              <EmptyState>
-                <Archive size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
-                <div>No projects yet</div>
-                <div style={{ fontSize: '0.75rem', marginTop: '4px' }}>
-                  Create your first project to get started
-                </div>
-              </EmptyState>
-            ) : (
-              projects.map(project => (
-                <ProjectCard
-                  key={project.id}
-                  className={currentProject?.id === project.id ? 'active' : ''}
-                  onClick={() => setCurrentProject(project)}
-                >
-                  <ProjectTitle>
-                    <FolderOpen size={14} />
-                    {project.title}
-                    <ProjectStatus status={project.status}>
-                      {project.status}
-                    </ProjectStatus>
-                  </ProjectTitle>
-                  <ProjectMeta>
-                    <span>{project.lastModified}</span>
-                    {project.completion && (
-                      <span>{project.completion}% complete</span>
-                    )}
-                  </ProjectMeta>
-                </ProjectCard>
-              ))
-            )}
-          </ProjectsSection>
-        </>
+        <ProjectManager />
       )}
 
       {activeView === 'roadmap' && (

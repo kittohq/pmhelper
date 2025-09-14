@@ -5,9 +5,11 @@ import LeftPanel from './components/LeftPanel';
 import DocumentsPane from './components/DocumentsPane';
 import ChatPane from './components/ChatPane';
 import PRDEditor from './components/PRDEditor';
+import SystemPromptModal from './components/SystemPromptModal';
 import { useStore } from './store/appStore';
 import { ollamaService } from './services/ollamaService';
 import { apiService } from './services/apiService';
+import { buildSystemPrompt, getSystemPromptSections } from './config/systemPrompts';
 
 const AppContainer = styled.div`
   display: flex;
@@ -74,19 +76,27 @@ function App() {
   } = useStore();
 
   const [isOllamaConnected, setIsOllamaConnected] = useState(false);
+  const [availableModels, setAvailableModels] = useState([]);
+  const [selectedModel, setSelectedModel] = useState(ollamaService.getCurrentModel());
+  const [showSystemPrompt, setShowSystemPrompt] = useState(false);
 
   useEffect(() => {
-    // Initialize with a PRD template
-    initializePRD();
+    // Initialize with a PRD template if one doesn't exist
+    if (!currentPRD) {
+      initializePRD();
+    }
     // Check Ollama connection
     checkOllamaConnection();
   }, []);
 
   const initializePRD = async () => {
+    const defaultTemplate = 'lean'; // Default template type
     try {
-      const template = await apiService.getPRDTemplate('basic');
+      const template = await apiService.getPRDTemplate(defaultTemplate);
       setCurrentPRD({
         ...template,
+        templateType: defaultTemplate,
+        templateName: 'Lean PRD',
         title: 'New Product Requirements Document',
         sections: {
           ...template.sections,
@@ -98,13 +108,28 @@ function App() {
       });
     } catch (error) {
       // Use default template if API fails
-      setCurrentPRD(getDefaultPRDTemplate());
+      setCurrentPRD({
+        ...getDefaultPRDTemplate(),
+        templateType: 'basic',
+        templateName: 'Basic PRD'
+      });
     }
   };
 
   const checkOllamaConnection = async () => {
     const connected = await ollamaService.checkConnection();
     setIsOllamaConnected(connected);
+    if (connected) {
+      const models = ollamaService.getAvailableModels();
+      setAvailableModels(models);
+      console.log('Ollama is connected with models:', models.map(m => m.name));
+    }
+  };
+
+  const handleModelChange = (modelName) => {
+    ollamaService.setModel(modelName);
+    setSelectedModel(modelName);
+    console.log('Changed Ollama model to:', modelName);
   };
 
   const getDefaultPRDTemplate = () => ({
@@ -250,40 +275,108 @@ function App() {
                                message.toLowerCase().includes('write') ||
                                message.toLowerCase().includes('define') ||
                                message.toLowerCase().includes('my project') ||
-                               message.toLowerCase().includes('my product');
+                               message.toLowerCase().includes('my product') ||
+                               message.toLowerCase().includes('prd for me');
+    
+    // Check for missing required sections in current PRD
+    const missingSections = currentPRD?.sections ? 
+      Object.entries(currentPRD.sections)
+        .filter(([key, section]) => section.required && (!section.content || section.content.length < 20))
+        .map(([key, section]) => section.title) : [];
     
     // Build comprehensive prompt
     let prompt = '';
     
     if (isAskingForContent) {
       // User wants help creating actual PRD content
-      prompt = `You are an expert Product Manager helping to create a comprehensive Product Requirements Document (PRD).
+      const templateType = currentPRD?.templateType || 'lean';
+      const templateName = currentPRD?.templateName || 'Lean PRD';
+      
+      // Check if message is underspecified
+      const isUnderspecified = message.toLowerCase().includes('create') && 
+                               message.toLowerCase().includes('prd') &&
+                               message.length < 100 && // Short message
+                               !message.includes('product:') &&
+                               !message.includes('problem:') &&
+                               !message.includes('users:');
+      
+      if (isUnderspecified) {
+        // Include missing sections information
+        const missingSectionsText = missingSections.length > 0 ? 
+          `
 
-IMPORTANT: The user is asking for help with THEIR specific project. They will provide a description of their product/project.
-Your job is to:
-1. Understand their project description
-2. Ask clarifying questions if the description is vague
-3. Help them create actual PRD content based on their project
-4. Fill in specific sections of the PRD template with relevant content
+⚠️ **Missing Required Sections in Your Current PRD:**
+${missingSections.map(s => `• ${s}`).join('\n')}
+
+These sections need to be completed for a comprehensive PRD.` : '';
+        
+        // Force the response to ask for more information
+        prompt = `The user said: "${message}"
+
+This is an underspecified request. You MUST respond EXACTLY with this message:
+
+I'd be happy to help create your PRD! To get started, I need some essential information:
+
+☐ **Product/Feature Name**: What should we call this product or feature?
+   *Example: "Customer Analytics Dashboard" or "One-Click Checkout"*
+
+☐ **Problem Statement**: What specific problem are you solving?
+   *Example: "Sales teams spend 2+ hours daily manually compiling customer data from multiple sources"*
+
+☐ **Target Users**: Who will use this? Be specific.
+   *Example: "B2B sales managers at mid-market SaaS companies (50-500 employees)"*
+
+☐ **Core Functionality**: What are the 2-3 main things this must do?
+   *Example: "1) Aggregate data from CRM and email, 2) Generate weekly reports, 3) Alert on at-risk accounts"*
+
+☐ **Success Metric**: How will you measure success?
+   *Example: "Reduce time spent on reporting by 75% within 3 months"*
+
+Please provide these details, and I'll create a comprehensive PRD using the ${templateType} template.${missingSectionsText}`;
+      } else {
+        // User provided some details, use normal prompt
+        const systemPrompt = buildSystemPrompt(templateType);
+        
+        // Include validation feedback in the prompt
+        const validationFeedback = missingSections.length > 0 ? 
+          `
+
+IMPORTANT: The current PRD has these missing required sections that need to be filled:
+${missingSections.map(s => `- ${s}`).join('\n')}
+
+Include a note about these missing sections in your response and offer to help complete them.` : '';
+        
+        // Include current PRD content to give AI context
+        const currentPRDContent = currentPRD?.sections ? 
+          Object.entries(currentPRD.sections)
+            .filter(([key, section]) => section.content && section.content.length > 0)
+            .map(([key, section]) => `### ${section.title}\n${section.content}`)
+            .join('\n\n') : '';
+        
+        prompt = `${systemPrompt}
+
+User's Request: ${message}
+
+Current PRD Content (what has been written so far):
+${currentPRDContent || 'No content written yet'}
 
 Current PRD Template Structure:
 ${JSON.stringify(prdSections, null, 2)}
 
-Project/Product Context from User:
-${contextDocs || 'No additional context provided yet'}
+Context: ${contextDocs || 'No additional context'}${validationFeedback}
 
-User's Request: ${message}
-
-Instructions:
-- If the user provides a project description, help them create specific PRD content for that project
-- If the description is vague, ask specific questions to gather more details
-- Don't just explain what a PRD is - actually help create one
-- Provide concrete, actionable content that can be directly used in their PRD
-- Focus on the specific section they're asking about, but ensure it aligns with the overall product vision
-- Format your response as actual PRD content, not as advice about PRD content
-- Write in a professional, clear manner suitable for a PRD document`;
+Based on the existing PRD content above and the user's request, continue building the PRD.
+If the user has provided sufficient information (product name, problem, users, core functionality, and success metric), generate PRD content for the missing sections.
+If information is missing, ask for the specific missing pieces.
+Always mention any missing required sections that need to be completed.`;
+      }
     } else {
-      // General question or guidance
+      // General question or guidance - still include missing sections if relevant
+      const validationNote = missingSections.length > 0 ? 
+        `
+
+Note: Your current PRD has missing required sections: ${missingSections.join(', ')}. Would you like help completing these?` : '';
+      
       prompt = `You are a Product Manager assistant helping with PRD creation.
 
 Current PRD Template:
@@ -291,26 +384,72 @@ ${JSON.stringify(Object.keys(prdSections), null, 2)}
 
 User Question: ${message}
 
-Provide helpful guidance about PRD best practices and answer their question.`;
+Provide helpful guidance about PRD best practices and answer their question.${validationNote}`;
     }
 
     try {
-      const response = await ollamaService.chat(prompt, JSON.stringify(currentPRD));
-      addMessage({ role: 'assistant', content: response });
+      console.log('Attempting to send to Ollama...');
+      console.log('Ollama connected status:', isOllamaConnected);
+      console.log('Prompt length:', prompt.length);
+      console.log('First 500 chars of prompt:', prompt.substring(0, 500));
       
-      // Auto-update PRD if AI generated content for specific sections
-      if (isAskingForContent && response) {
-        updatePRDFromAIResponse(response, message);
+      // Don't send the entire PRD as context, it might be too large or malformed
+      const response = await ollamaService.chat(prompt);
+      
+      // Check if we got a valid response
+      if (response && response !== '') {
+        console.log('Got valid response from Ollama, length:', response.length);
+        console.log('First 300 chars of response:', response.substring(0, 300));
+        addMessage({ role: 'assistant', content: response });
+        
+        // Auto-update PRD if AI generated content for specific sections
+        // But skip if AI is asking for more information
+        const isAskingForInfo = response.includes('I need more information') || 
+                                response.includes('To get started, I need') ||
+                                response.includes('Please provide these details');
+        
+        if (isAskingForContent && response && !isAskingForInfo) {
+          updatePRDFromAIResponse(response, message);
+        }
+      } else {
+        console.log('Empty response from Ollama, using fallback');
+        throw new Error('Empty response from Ollama');
       }
     } catch (error) {
-      console.error('Ollama error:', error);
+      console.error('=== OLLAMA ERROR ===');
+      console.error('Error type:', error.name);
+      console.error('Error message:', error.message);
+      console.error('Is network error?', error.message.includes('Network') || error.message.includes('CORS'));
+      console.error('Full error:', error);
+      console.error('Error stack:', error.stack);
+      console.error('===================');
       
-      // Provide helpful fallback response
-      const fallbackResponse = getFallbackResponse(message);
-      addMessage({ 
-        role: 'assistant', 
-        content: fallbackResponse 
-      });
+      // Check if it's specifically a CORS/network error
+      if (error.message.includes('Network') || error.message.includes('CORS') || error.code === 'ERR_NETWORK') {
+        addMessage({ 
+          role: 'assistant', 
+          content: `⚠️ Cannot connect to Ollama. Please ensure:
+1. Ollama is running (check with: ollama list)
+2. CORS is enabled for Ollama
+3. The browser allows connections to localhost:11434
+
+Error: ${error.message}
+
+For now, here's what you should include in your PRD request:
+- Product/Feature Name
+- Problem Statement
+- Target Users
+- Core Functionality (2-3 features)
+- Success Metric`
+        });
+      } else {
+        // Other errors - use fallback
+        const fallbackResponse = getFallbackResponse(message);
+        addMessage({ 
+          role: 'assistant', 
+          content: fallbackResponse 
+        });
+      }
     }
   };
 
@@ -455,6 +594,10 @@ Try asking about specific sections like "How do I write user stories?" or "What 
   return (
     <AppContainer>
       <Toaster position="top-right" />
+      <SystemPromptModal 
+        isOpen={showSystemPrompt} 
+        onClose={() => setShowSystemPrompt(false)} 
+      />
       
       <LeftPaneContainer>
         <LeftPanel />
@@ -463,8 +606,47 @@ Try asking about specific sections like "How do I write user stories?" or "What 
       <MiddlePane>
         <Header>
           <Title>💬 AI Assistant</Title>
-          <Subtitle>
-            {isOllamaConnected ? 'Connected to Ollama' : 'Ollama not connected'}
+          <Subtitle style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
+            {isOllamaConnected ? (
+              <>
+                <span style={{ color: '#10b981' }}>● Connected</span>
+                <select 
+                  value={selectedModel} 
+                  onChange={(e) => handleModelChange(e.target.value)}
+                  style={{ 
+                    background: 'rgba(255,255,255,0.2)', 
+                    border: '1px solid rgba(255,255,255,0.3)',
+                    borderRadius: '4px',
+                    padding: '2px 8px',
+                    color: 'white',
+                    fontSize: '0.85rem'
+                  }}
+                >
+                  {availableModels.map(model => (
+                    <option key={model.name} value={model.name} style={{ background: '#1a1d23' }}>
+                      {model.name}
+                    </option>
+                  ))}
+                </select>
+              </>
+            ) : (
+              <span style={{ color: '#ef4444' }}>● Ollama not connected</span>
+            )}
+            <button
+              onClick={() => setShowSystemPrompt(!showSystemPrompt)}
+              style={{
+                marginLeft: '10px',
+                background: 'rgba(255,255,255,0.2)',
+                border: '1px solid rgba(255,255,255,0.3)',
+                borderRadius: '4px',
+                padding: '2px 8px',
+                color: 'white',
+                fontSize: '0.8rem',
+                cursor: 'pointer'
+              }}
+            >
+              {showSystemPrompt ? 'Hide' : 'Show'} System Prompt
+            </button>
           </Subtitle>
         </Header>
         <ChatPane onSendMessage={handleSendMessage} />
@@ -474,11 +656,20 @@ Try asking about specific sections like "How do I write user stories?" or "What 
         <Header>
           <Title>📝 PRD Editor</Title>
           <Subtitle>
-            {currentProject ? currentProject.title : 'Select a project to begin'}
+            {currentProject ? currentProject.name : 'Select a project to begin'}
           </Subtitle>
         </Header>
-        {currentProject ? (
+        {currentProject && currentPRD ? (
           <PRDEditor />
+        ) : currentProject ? (
+          <div style={{ 
+            padding: '3rem', 
+            textAlign: 'center', 
+            color: '#999' 
+          }}>
+            <h3>Loading PRD...</h3>
+            <p>Initializing PRD template for {currentProject.name}</p>
+          </div>
         ) : (
           <div style={{ 
             padding: '3rem', 
