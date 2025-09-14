@@ -7,10 +7,13 @@ import ChatPane from './components/ChatPane';
 import PRDEditor from './components/PRDEditor';
 import SpecificationView from './components/SpecificationView';
 import SystemPromptModal from './components/SystemPromptModal';
+import AIProviderSettings from './components/AIProviderSettings';
 import { useStore } from './store/appStore';
 import { ollamaService } from './services/ollamaService';
+import { aiProviderService } from './services/aiProviderService';
 import { apiService } from './services/apiService';
 import { buildSystemPrompt, getSystemPromptSections } from './config/systemPrompts';
+import { Settings, Cpu, Cloud } from 'lucide-react';
 
 const AppContainer = styled.div`
   display: flex;
@@ -71,8 +74,67 @@ const Header = styled.header`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   padding: 1rem;
-  text-align: center;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+`;
+
+const HeaderTop = styled.div`
+  width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+`;
+
+const ProviderSelector = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+`;
+
+const ProviderButton = styled.button`
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0.8rem;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  color: white;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    border-color: rgba(255, 255, 255, 0.4);
+  }
+`;
+
+const SettingsButton = styled.button`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 6px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: rgba(255, 255, 255, 0.25);
+    transform: rotate(90deg);
+  }
+`;
+
+const EmptySpace = styled.div`
+  width: 120px; // Placeholder to balance the layout
 `;
 
 const Title = styled.h1`
@@ -103,6 +165,8 @@ function App() {
   const [availableModels, setAvailableModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(ollamaService.getCurrentModel());
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+  const [showAISettings, setShowAISettings] = useState(false);
+  const [currentProvider, setCurrentProvider] = useState(aiProviderService.getCurrentProvider());
   const [rightPaneTab, setRightPaneTab] = useState('prd'); // 'prd' or 'specification'
 
   useEffect(() => {
@@ -142,13 +206,26 @@ function App() {
   };
 
   const checkOllamaConnection = async () => {
-    const connected = await ollamaService.checkConnection();
-    setIsOllamaConnected(connected);
-    if (connected) {
-      const models = ollamaService.getAvailableModels();
-      setAvailableModels(models);
-      console.log('Ollama is connected with models:', models.map(m => m.name));
+    // Use the new AI provider service
+    const result = await aiProviderService.checkConnection();
+    setIsOllamaConnected(result.connected);
+    if (result.connected) {
+      if (result.models) {
+        setAvailableModels(result.models);
+        console.log('AI provider connected:', aiProviderService.getCurrentProvider());
+      }
     }
+  };
+
+  const getProviderIcon = () => {
+    const provider = aiProviderService.getCurrentProvider();
+    if (provider === 'ollama') return <Cpu size={16} />;
+    return <Cloud size={16} />;
+  };
+
+  const getProviderName = () => {
+    const info = aiProviderService.getProviderInfo();
+    return info.name;
   };
 
   const handleModelChange = (modelName) => {
@@ -380,7 +457,7 @@ Respond with ONLY one word: SUFFICIENT or NEEDS_INFO`;
         console.log('Sending assessment to Ollama...');
 
         // Use moderate temperature for balance between consistency and intelligence
-        const assessmentResponse = await ollamaService.chatWithOptions(
+        const assessmentResponse = await aiProviderService.chat(
           focusedAssessmentPrompt,
           '',
           {
@@ -506,7 +583,7 @@ Provide helpful guidance about PRD best practices and answer their question.${va
       console.log('First 500 chars of prompt:', prompt.substring(0, 500));
       
       // Don't send the entire PRD as context, it might be too large or malformed
-      const response = await ollamaService.chat(prompt);
+      const response = await aiProviderService.chat(prompt, '');
       
       // Check if we got a valid response
       if (response && response !== '') {
@@ -538,12 +615,12 @@ Provide helpful guidance about PRD best practices and answer their question.${va
       
       // Check if it's specifically a CORS/network error
       if (error.message.includes('Network') || error.message.includes('CORS') || error.code === 'ERR_NETWORK') {
-        addMessage({ 
-          role: 'assistant', 
-          content: `⚠️ Cannot connect to Ollama. Please ensure:
-1. Ollama is running (check with: ollama list)
-2. CORS is enabled for Ollama
-3. The browser allows connections to localhost:11434
+        addMessage({
+          role: 'assistant',
+          content: `⚠️ Cannot connect to AI service. Please ensure:
+1. Your selected AI provider (${aiProviderService.getCurrentProvider()}) is properly configured
+2. API keys are valid (if using OpenAI/Claude)
+3. Backend server is running on port 3001
 
 Error: ${error.message}
 
@@ -614,7 +691,7 @@ For now, here's what you should include in your PRD request:
 Click "Templates" in the left panel to use them.`;
     }
     
-    return `I can help you improve your PRD. While Ollama is not currently connected, here are some suggestions:
+    return `I can help you improve your PRD. While the AI service is not currently connected, here are some suggestions:
 
 1. **Structure your PRD** with clear sections
 2. **Define the problem** you're solving
@@ -777,9 +854,17 @@ Try asking about specific sections like "How do I write user stories?" or "What 
   return (
     <AppContainer>
       <Toaster position="top-right" />
-      <SystemPromptModal 
-        isOpen={showSystemPrompt} 
-        onClose={() => setShowSystemPrompt(false)} 
+      <SystemPromptModal
+        isOpen={showSystemPrompt}
+        onClose={() => setShowSystemPrompt(false)}
+      />
+      <AIProviderSettings
+        isOpen={showAISettings}
+        onClose={() => {
+          setShowAISettings(false);
+          // Refresh connection status after settings change
+          checkOllamaConnection();
+        }}
       />
       
       <LeftPaneContainer>
@@ -788,7 +873,24 @@ Try asking about specific sections like "How do I write user stories?" or "What 
 
       <MiddlePane>
         <Header>
-          <Title>💬 AI Assistant</Title>
+          <HeaderTop>
+            <EmptySpace />
+            <Title>💬 AI Assistant</Title>
+            <ProviderSelector>
+              <ProviderButton onClick={() => setShowAISettings(true)}>
+                {getProviderIcon()}
+                <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: '2px' }}>
+                  <span style={{ fontSize: '0.8rem' }}>{getProviderName()}</span>
+                  <span style={{ fontSize: '0.65rem', opacity: 0.8 }}>
+                    {aiProviderService.getCurrentModel().split('-')[0].replace('gpt', 'GPT-').replace('claude', 'Claude ').replace('mistral', 'Mistral')}
+                  </span>
+                </div>
+              </ProviderButton>
+              <SettingsButton onClick={() => setShowAISettings(true)}>
+                <Settings size={16} />
+              </SettingsButton>
+            </ProviderSelector>
+          </HeaderTop>
           <Subtitle style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px' }}>
             {isOllamaConnected ? (
               <>

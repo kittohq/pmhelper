@@ -274,6 +274,70 @@ app.get('/api/ollama/tags', async (req, res) => {
   }
 });
 
+// AI Provider endpoints
+const openaiProvider = require('./providers/openaiProvider');
+const anthropicProvider = require('./providers/anthropicProvider');
+
+// OpenAI endpoints
+app.post('/api/providers/openai/check', async (req, res) => {
+  try {
+    const result = await openaiProvider.checkConnection(req.body.apiKey);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/providers/openai/chat', async (req, res) => {
+  try {
+    const result = await openaiProvider.chat(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error('OpenAI chat error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Anthropic/Claude endpoints
+app.post('/api/providers/anthropic/check', async (req, res) => {
+  try {
+    const result = await anthropicProvider.checkConnection(req.body.apiKey);
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
+app.post('/api/providers/anthropic/chat', async (req, res) => {
+  try {
+    const result = await anthropicProvider.chat(req.body);
+    res.json(result);
+  } catch (error) {
+    console.error('Anthropic chat error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
+// Ollama endpoints (existing, but now routed through provider pattern)
+app.post('/api/providers/ollama/chat', async (req, res) => {
+  try {
+    // Use existing Ollama proxy
+    const response = await axios.post('http://127.0.0.1:11434/api/generate', {
+      model: req.body.model || 'mistral:7b-instruct',
+      prompt: req.body.prompt,
+      stream: false,
+      options: req.body.options || { temperature: 0.7 }
+    }, {
+      timeout: 300000
+    });
+
+    res.json({ response: response.data.response });
+  } catch (error) {
+    console.error('Ollama chat error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Background job endpoints for long-running operations
 const jobManager = require('./services/backgroundJobs');
 
