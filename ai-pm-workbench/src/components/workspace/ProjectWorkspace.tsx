@@ -15,6 +15,7 @@ import {
 import { useParams } from "react-router-dom";
 import ReactMarkdown from "react-markdown";
 import remarkGfm from "remark-gfm";
+import remarkBreaks from "remark-breaks";
 import { useToast } from "@/hooks/use-toast";
 import { projectApi } from "@/lib/projectApi";
 import { prdApi } from "@/lib/prdApi";
@@ -325,15 +326,27 @@ export function ProjectWorkspace() {
                   }));
                 }
               }}
-              className="flex-1 font-mono text-sm resize-none"
+              className="flex-1 font-mono text-sm resize-none h-full"
               placeholder={`Enter ${type.toUpperCase()} content in Markdown format...`}
             />
           ) : (
             <ScrollArea className="flex-1 border rounded-lg">
               <div className="p-6">
                 {contentData.content ? (
-                  <div className="prose prose-sm max-w-none dark:prose-invert">
-                    <ReactMarkdown remarkPlugins={[remarkGfm]}>
+                  <div className="prose prose-sm max-w-none dark:prose-invert prose-p:leading-relaxed prose-p:mb-4">
+                    <ReactMarkdown
+                      remarkPlugins={[remarkGfm, remarkBreaks]}
+                      components={{
+                        // Ensure line breaks are properly rendered
+                        br: ({ ...props }) => <br {...props} />,
+                        // Ensure paragraphs have proper spacing
+                        p: ({ children, ...props }) => (
+                          <p className="mb-4 leading-relaxed whitespace-pre-wrap" {...props}>
+                            {children}
+                          </p>
+                        ),
+                      }}
+                    >
                       {type === "prd" ? contentData.content : content.spec.content}
                     </ReactMarkdown>
                   </div>

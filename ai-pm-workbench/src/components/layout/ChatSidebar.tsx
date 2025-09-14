@@ -28,6 +28,7 @@ interface Message {
   type?: string;
   requires_input?: boolean;
   missing_info?: string[];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   metadata?: Record<string, any>;
 }
 
