@@ -361,6 +361,206 @@ CMD ["node", "server-simple.js"]
 4. Follow existing code patterns
 5. Test with frontend integration
 
+## Complete Interaction Flow
+
+### User Journey Overview
+
+The PM Helper application follows a sophisticated flow from user input to PRD generation:
+
+```
+User Input → Frontend Processing → LLM Assessment → Backend Proxy → Ollama → Response Processing → PRD Update
+```
+
+### Detailed Interaction Flow
+
+#### 1. User Initiates Request (Frontend)
+```javascript
+// User types in ChatPane component
+"I want to build a fitness tracking app called FitTracker"
+```
+
+#### 2. Frontend Assessment (App.js)
+The frontend performs intelligent request analysis:
+
+```javascript
+// Step 1: Build conversation context (lines 282-293)
+const conversationContext = messages.slice(-10)
+  .map(m => `${m.role}: ${m.content}`)
+  .join('\n');
+
+// Step 2: LLM-based underspecification assessment (lines 295-338)
+const assessmentPrompt = `
+  ${buildSystemPrompt(templateType)}
+  Current PRD Template: ${templateName}
+  Required sections: [...]
+  User's request: "${message}"
+  Respond with: "SUFFICIENT" or "NEEDS_INFO"
+`;
+
+// Step 3: Decision branching
+if (isUnderspecified) {
+  // Request more information with specific prompts
+} else {
+  // Generate PRD content
+}
+```
+
+#### 3. Context Inclusion
+The system includes all relevant context in prompts:
+
+```javascript
+// Current PRD content (lines 387-391)
+const currentPRDContent = Object.entries(currentPRD.sections)
+  .filter(([key, section]) => section.content?.length > 0)
+  .map(([key, section]) => `### ${section.title}\n${section.content}`)
+  .join('\n\n');
+
+// Full prompt construction (lines 393-408)
+prompt = `
+  ${systemPrompt}
+  User's Request: ${message}
+  Current PRD Content: ${currentPRDContent}
+  Template Structure: ${JSON.stringify(prdSections)}
+  Context: ${contextDocs}
+`;
+```
+
+#### 4. Backend Proxy Request
+Frontend sends to backend via ollamaService:
+
+```javascript
+// ollamaService.js
+const response = await axios.post(
+  'http://localhost:3001/api/ollama/chat',
+  {
+    model: 'mistral:7b-instruct',
+    messages: [{ role: 'user', content: prompt }],
+    stream: false,
+    options: { num_predict: 4096 }
+  },
+  { timeout: 300000 } // 5 minutes
+);
+```
+
+#### 5. Backend Processing (server-simple.js)
+Backend forwards to Ollama:
+
+```javascript
+app.post('/api/ollama/chat', async (req, res) => {
+  try {
+    const response = await axios.post(
+      'http://localhost:11434/api/chat',
+      req.body,
+      { timeout: 300000 }
+    );
+    res.json(response.data);
+  } catch (error) {
+    res.status(500).json({ error: 'Ollama request failed' });
+  }
+});
+```
+
+#### 6. Response Processing
+AI response is parsed and PRD sections are updated:
+
+```javascript
+// App.js (lines 423-440)
+const sectionRegex = /##\s*([^#\n]+)\n([\s\S]*?)(?=##\s*[^#\n]+\n|$)/g;
+while ((match = sectionRegex.exec(aiResponse))) {
+  const sectionTitle = match[1].trim();
+  const sectionContent = match[2].trim();
+  
+  const sectionKey = Object.keys(currentPRD.sections)
+    .find(key => 
+      currentPRD.sections[key].title.toLowerCase() === 
+      sectionTitle.toLowerCase()
+    );
+  
+  if (sectionKey) {
+    updatePRDSection(sectionKey, sectionContent);
+  }
+}
+```
+
+### Key Decision Points
+
+#### Underspecification Detection
+The system uses LLM assessment instead of hardcoded rules:
+
+**Sufficient Input Example:**
+```
+"I want to build a fitness tracking mobile app called 'FitTracker'.
+Target users: fitness enthusiasts and beginners"
+```
+→ LLM decides: SUFFICIENT → Generates PRD
+
+**Insufficient Input Example:**
+```
+"Help me with a PRD"
+```
+→ LLM decides: NEEDS_INFO → Asks for details
+
+#### Template Selection Impact
+Different templates trigger different requirements:
+- **Lean**: Minimal sections (problem, solution, metrics)
+- **Enterprise**: Comprehensive (governance, risk, compliance)
+
+The template affects the LLM's assessment of what constitutes "sufficient" information.
+
+### PRD Editor Integration
+
+#### Content Synchronization
+All PRD editor content is included in chat context:
+
+1. **User edits in PRDEditor** → Stored in Zustand store
+2. **User sends chat message** → Current PRD content included
+3. **AI generates response** → Considers existing content
+4. **Response updates PRD** → Editor reflects changes
+
+#### Warning System Logic
+Missing sections warning appears only when:
+```javascript
+// PRDEditor.js (lines 334-348)
+hasSubstantialContent && filledSectionsCount >= 2
+```
+
+### Data Flow Example
+
+**User Input:**
+```
+"I want to build FitTracker for fitness enthusiasts"
+```
+
+**System Processing:**
+1. Assessment: "SUFFICIENT" (has name, domain, users)
+2. Context: Empty PRD (new project)
+3. Template: Lean (default)
+4. Prompt includes: System instructions + User request + Template structure
+5. Ollama generates: Problem, Solution, Metrics sections
+6. Frontend parses: Updates 3 PRD sections
+7. Editor displays: Updated content without warning
+
+### Error Handling Flow
+
+1. **Timeout (5 minutes)**: User notified, can retry
+2. **Ollama offline**: Error message with setup instructions
+3. **Invalid template**: Falls back to lean template
+4. **Parse errors**: Original response shown in chat
+
+### State Management
+
+The application uses Zustand for state with localStorage persistence:
+
+```javascript
+// appStore.js
+- currentPRD: Active PRD being edited
+- messages: Chat history
+- documents: Uploaded context files
+- projects: All user projects
+```
+
+State updates trigger re-renders and context updates automatically.
+
 ## Resources
 
 - [Express.js Documentation](https://expressjs.com/)
