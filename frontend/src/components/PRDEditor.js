@@ -331,12 +331,18 @@ function PRDEditor() {
   const completedSections = Object.values(currentPRD.sections)
     .filter(section => section.content && section.content.length > 50).length;
   
-  // Check if user has started filling the PRD
-  const hasStartedFilling = Object.values(currentPRD.sections)
-    .some(section => section.content && section.content.length > 0);
+  // Check if user has made substantial edits (more than just AI-generated content)
+  // Consider it "started" only if there's significant content (>100 chars) in any section
+  const hasSubstantialContent = Object.values(currentPRD.sections)
+    .some(section => section.content && section.content.length > 100);
   
-  // Only show missing sections warning if user has started but hasn't filled required sections
-  const missingSections = hasStartedFilling ? 
+  // Count how many sections have any content
+  const filledSectionsCount = Object.values(currentPRD.sections)
+    .filter(section => section.content && section.content.trim().length > 0).length;
+  
+  // Only show warning if user has filled at least 2 sections but is missing required ones
+  // This avoids showing the warning for initial AI-generated content
+  const missingSections = (hasSubstantialContent && filledSectionsCount >= 2) ? 
     Object.entries(currentPRD.sections)
       .filter(([key, section]) => section.required && (!section.content || section.content.trim().length < 20))
       .map(([key, section]) => section.title) : [];
