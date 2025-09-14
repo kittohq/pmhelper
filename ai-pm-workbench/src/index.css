@@ -1,0 +1,147 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* AI Product Manager Design System - Professional & Modern */
+
+@layer base {
+  :root {
+    /* Core neutral palette */
+    --background: 0 0% 100%;
+    --foreground: 224 15% 15%;
+
+    /* Surface colors */
+    --card: 0 0% 100%;
+    --card-foreground: 224 15% 15%;
+    
+    --popover: 0 0% 100%;
+    --popover-foreground: 224 15% 15%;
+
+    /* Brand colors - Professional blue-purple gradient */
+    --primary: 250 84% 60%;
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 260 100% 70%;
+    
+    /* Secondary palette - Refined grays */
+    --secondary: 220 13% 97%;
+    --secondary-foreground: 224 15% 25%;
+    
+    /* Muted tones for subtle elements */
+    --muted: 220 13% 97%;
+    --muted-foreground: 220 9% 55%;
+    
+    /* Accent for interactive elements */
+    --accent: 250 100% 97%;
+    --accent-foreground: 250 84% 60%;
+    
+    /* Status colors */
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 100%;
+    --success: 142 76% 36%;
+    --success-foreground: 0 0% 100%;
+    --warning: 38 92% 50%;
+    --warning-foreground: 0 0% 100%;
+
+    /* Borders and inputs */
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 250 84% 60%;
+
+    --radius: 0.5rem;
+
+    /* Professional sidebar colors */
+    --sidebar-background: 250 24% 97%;
+    --sidebar-foreground: 224 15% 25%;
+    --sidebar-primary: 250 84% 60%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent: 250 100% 95%;
+    --sidebar-accent-foreground: 250 84% 60%;
+    --sidebar-border: 220 13% 91%;
+    --sidebar-ring: 250 84% 60%;
+
+    /* Gradients for modern aesthetics */
+    --gradient-primary: linear-gradient(135deg, hsl(250 84% 60%), hsl(260 100% 70%));
+    --gradient-muted: linear-gradient(180deg, hsl(220 13% 98%), hsl(220 13% 96%));
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%), hsl(220 13% 99%));
+
+    /* Shadows for depth */
+    --shadow-sm: 0 1px 2px 0 hsl(220 13% 69% / 0.05);
+    --shadow-md: 0 4px 6px -1px hsl(220 13% 69% / 0.1), 0 2px 4px -1px hsl(220 13% 69% / 0.06);
+    --shadow-lg: 0 10px 15px -3px hsl(220 13% 69% / 0.1), 0 4px 6px -2px hsl(220 13% 69% / 0.05);
+    --shadow-primary: 0 4px 14px 0 hsl(250 84% 60% / 0.25);
+
+    /* Transitions */
+    --transition-smooth: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .dark {
+    /* Dark theme adjustments */
+    --background: 224 15% 8%;
+    --foreground: 220 13% 92%;
+    
+    --card: 224 15% 10%;
+    --card-foreground: 220 13% 92%;
+    
+    --popover: 224 15% 10%;
+    --popover-foreground: 220 13% 92%;
+    
+    --primary: 250 84% 60%;
+    --primary-foreground: 0 0% 100%;
+    
+    --secondary: 224 15% 15%;
+    --secondary-foreground: 220 13% 85%;
+    
+    --muted: 224 15% 15%;
+    --muted-foreground: 220 9% 65%;
+    
+    --accent: 250 84% 15%;
+    --accent-foreground: 250 84% 80%;
+    
+    --border: 224 15% 20%;
+    --input: 224 15% 20%;
+    
+    --sidebar-background: 224 15% 6%;
+    --sidebar-foreground: 220 13% 85%;
+    --sidebar-accent: 224 15% 12%;
+    
+    /* Dark mode gradients */
+    --gradient-primary: linear-gradient(135deg, hsl(250 84% 55%), hsl(260 100% 65%));
+    --gradient-muted: linear-gradient(180deg, hsl(224 15% 10%), hsl(224 15% 8%));
+    --gradient-card: linear-gradient(180deg, hsl(224 15% 12%), hsl(224 15% 10%));
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  body {
+    @apply bg-background text-foreground font-sans;
+    font-feature-settings: "rlig" 1, "calt" 1;
+  }
+
+  /* Custom scrollbars */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-muted;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-muted-foreground/30 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-muted-foreground/50;
+  }
+
+  /* Smooth focus rings */
+  .focus-ring {
+    @apply outline-none ring-2 ring-primary/20 ring-offset-2 ring-offset-background;
+  }
+}
