@@ -331,10 +331,15 @@ function PRDEditor() {
   const completedSections = Object.values(currentPRD.sections)
     .filter(section => section.content && section.content.length > 50).length;
   
-  // Check for missing required sections
-  const missingSections = Object.entries(currentPRD.sections)
-    .filter(([key, section]) => section.required && (!section.content || section.content.length < 20))
-    .map(([key, section]) => section.title);
+  // Check if user has started filling the PRD
+  const hasStartedFilling = Object.values(currentPRD.sections)
+    .some(section => section.content && section.content.length > 0);
+  
+  // Only show missing sections warning if user has started but hasn't filled required sections
+  const missingSections = hasStartedFilling ? 
+    Object.entries(currentPRD.sections)
+      .filter(([key, section]) => section.required && (!section.content || section.content.trim().length < 20))
+      .map(([key, section]) => section.title) : [];
   
   const isSectionComplete = (section) => {
     return section.content && section.content.length > 20;
