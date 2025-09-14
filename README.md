@@ -29,7 +29,7 @@ The PM Helper is designed to:
 │                    └──────────────┘                      │
 └─────────────────────────┬─────────────────────────────┘
                          │
-                    HTTP (Port 3003)
+                    HTTP (Port 3001)
                          │
 ┌─────────────────────────┴─────────────────────────────┐
 │                 Backend (Express.js)                    │
@@ -62,23 +62,24 @@ When creating a new PRD, users must select a template type:
 ### 2. **AI-Assisted Generation**
 The AI helps in three ways:
 
-#### a. **Underspecified Request Handling**
-If you provide minimal input (e.g., "build a fitness app"), the AI asks for:
-- Problem being solved
-- Target users
-- Key features
-- Success metrics
-- Timeline/constraints
+#### a. **Intelligent Request Assessment**
+Uses LLM-based assessment (not hardcoded rules) to determine if input is sufficient:
+- Evaluates based on selected template requirements
+- Context-aware decision making
+- Adapts to different template types (Lean vs Enterprise)
 
 #### b. **Content Generation**
 With sufficient details, the AI generates PRD sections:
-- Uses existing content as context
+- Uses existing PRD content as context (all filled sections are included)
 - Follows template structure
 - Maintains consistency across sections
 - Suggests improvements
+- Automatically updates PRD editor in real-time
 
-#### c. **General Guidance**
-Answers questions about PRD best practices without generating content.
+#### c. **Smart Assistance**
+- Asks for specific missing information when needed
+- Shows warnings only after substantial editing (not on initial generation)
+- Provides template-specific guidance
 
 ### 3. **Workflow**
 
@@ -111,9 +112,10 @@ npm install
 node server-simple.js
 ```
 
-The backend runs on port 3003 and provides:
-- `/ollama` - Proxy endpoint for Ollama API
-- `/templates` - PRD template definitions
+The backend runs on port 3001 and provides:
+- `/api/ollama/*` - Proxy endpoints for Ollama API
+- `/api/templates/:type` - PRD template definitions
+- `/health` - Health check endpoint
 
 ### Frontend Setup
 
@@ -167,6 +169,15 @@ The AI uses a sophisticated prompt system:
 
 See `/prompts/` directory for all extracted prompts.
 
+## 📚 Developer Documentation
+
+- **Backend Developer Guide**: See `/backend/DEVELOPER_GUIDE.md` for:
+  - Complete interaction flow from user input to PRD generation
+  - API endpoint documentation
+  - Template structure and customization
+  - Testing guidelines
+  - Deployment considerations
+
 ## 📁 Project Structure
 
 ```
@@ -189,6 +200,7 @@ pmhelper/
 │
 ├── backend/
 │   ├── server-simple.js           # Express server
+│   ├── DEVELOPER_GUIDE.md         # Complete backend documentation
 │   ├── templates/                 # PRD template definitions
 │   │   ├── lean-prd.json
 │   │   ├── agile-prd.json
@@ -196,6 +208,7 @@ pmhelper/
 │   │   ├── amazon-prd.json
 │   │   ├── technical-prd.json
 │   │   └── enterprise-prd.json
+│   ├── tests/                     # Backend test suites
 │   └── package.json
 │
 └── prompts/                        # Extracted AI prompts
@@ -230,7 +243,7 @@ pmhelper/
 - May need to increase timeout for complex PRDs
 
 ### PRD content not updating
-- Ensure backend is running on port 3003
+- Ensure backend is running on port 3001
 - Check browser console for errors
 - Verify localStorage isn't full
 
