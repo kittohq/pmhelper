@@ -292,13 +292,50 @@ function App() {
       const templateType = currentPRD?.templateType || 'lean';
       const templateName = currentPRD?.templateName || 'Lean PRD';
       
-      // Check if message is underspecified
-      const isUnderspecified = message.toLowerCase().includes('create') && 
-                               message.toLowerCase().includes('prd') &&
-                               message.length < 100 && // Short message
-                               !message.includes('product:') &&
-                               !message.includes('problem:') &&
-                               !message.includes('users:');
+      // Let the LLM assess if the request is underspecified
+      // Include conversation history for better context
+      const conversationContext = messages.slice(-5).map(m => 
+        `${m.role}: ${m.content.substring(0, 200)}`
+      ).join('\n');
+      
+      const assessmentPrompt = `${buildSystemPrompt(templateType)}
+
+Current PRD Template: ${templateName}
+Required sections that need content:
+${Object.entries(currentPRD?.sections || {})
+        .filter(([_, section]) => section.required)
+        .map(([key, section]) => `- ${section.title}: ${section.content ? 'Has content' : 'Empty'}`)
+        .join('\n')}
+
+Previous conversation:
+${conversationContext}
+
+User's current request: "${message}"
+
+Based on the template requirements, existing PRD content, and conversation history, determine if you have enough information to generate meaningful PRD content.
+
+Consider:
+1. Can you create or enhance a problem statement from the provided context?
+2. Are target users specified or reasonably inferable?
+3. Is there enough detail to define concrete solution features?
+4. Can success metrics be derived or suggested based on the context?
+
+Respond with ONLY one word: "SUFFICIENT" if you can generate meaningful content, or "NEEDS_INFO" if critical details are missing.`;
+
+      // Make assessment call
+      let isUnderspecified = false;
+      try {
+        const assessmentResponse = await ollamaService.chat(assessmentPrompt, '');
+        console.log('Assessment response:', assessmentResponse);
+        
+        isUnderspecified = assessmentResponse.trim().toUpperCase().includes('NEEDS_INFO');
+      } catch (error) {
+        console.error('Assessment failed, using fallback logic:', error);
+        // Fallback to simple check if assessment fails
+        isUnderspecified = message.length < 100 && 
+                          !message.toLowerCase().includes('problem') &&
+                          !message.toLowerCase().includes('users');
+      }
       
       if (isUnderspecified) {
         // Include missing sections information
