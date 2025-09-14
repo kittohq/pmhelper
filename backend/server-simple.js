@@ -4,6 +4,7 @@ const path = require('path');
 const axios = require('axios');
 const { generatePRD, prdPrompts } = require('./templates/prd-template');
 const { prdTemplates } = require('./templates/prd-templates');
+const { specTemplates } = require('./templates/spec-templates');
 require('dotenv').config();
 
 const app = express();
@@ -106,6 +107,101 @@ app.get('/api/v1/templates/prd/prompts', (req, res) => {
   res.json(prdPrompts);
 });
 
+// Specification Template endpoints
+app.get('/api/v1/templates/spec', (req, res) => {
+  const { type = 'implementation' } = req.query;
+
+  if (specTemplates[type]) {
+    res.json({
+      ...specTemplates[type],
+      generatedAt: new Date().toISOString()
+    });
+  } else {
+    res.status(404).json({
+      error: 'Specification template not found',
+      availableTypes: Object.keys(specTemplates)
+    });
+  }
+});
+
+app.get('/api/v1/templates/spec/list', (req, res) => {
+  const templates = Object.entries(specTemplates).map(([key, template]) => ({
+    id: key,
+    name: template.name,
+    description: template.description
+  }));
+  res.json(templates);
+});
+
+// Specification assessment endpoint - checks if enough info exists
+app.post('/api/v1/specs/assess', async (req, res) => {
+  const { prd, engineeringNotes, templateType = 'implementation' } = req.body;
+
+  try {
+    // Use Ollama to assess if we have enough information
+    const assessmentPrompt = `You are a Senior Technical Architect evaluating if you have enough information to create a comprehensive technical specification.
+
+PRD Content:
+${JSON.stringify(prd, null, 2)}
+
+Engineering Notes:
+${engineeringNotes || 'None provided'}
+
+Required Specification Template: ${specTemplates[templateType]?.name || templateType}
+
+Required sections that need content:
+${specTemplates[templateType] ?
+  Object.entries(specTemplates[templateType].sections)
+    .filter(([_, section]) => section.required)
+    .map(([_, section]) => `- ${section.title}`)
+    .join('\n') :
+  'Template not found'}
+
+Evaluate if you can meaningfully fill each required section.
+Consider:
+1. Is the technology stack specified or clearly inferrable?
+2. Are performance requirements clear?
+3. Are integration points identified?
+4. Is team capacity/expertise mentioned?
+5. Are security requirements addressed?
+
+Respond with ONLY one word: "SUFFICIENT" or "NEEDS_INFO"`;
+
+    const response = await axios.post('http://127.0.0.1:11434/api/chat', {
+      model: 'mistral:7b-instruct',
+      messages: [{ role: 'user', content: assessmentPrompt }],
+      stream: false,
+      options: {
+        temperature: 0.3,
+        num_predict: 10
+      }
+    }, {
+      timeout: 30000
+    });
+
+    const assessment = response.data.message?.content || '';
+    const isSufficient = assessment.toUpperCase().includes('SUFFICIENT');
+
+    res.json({
+      sufficient: isSufficient,
+      assessment: assessment.trim(),
+      missingAreas: isSufficient ? [] : [
+        'Technology stack details',
+        'Performance requirements',
+        'Security constraints',
+        'Team expertise',
+        'Timeline and milestones'
+      ]
+    });
+  } catch (error) {
+    console.error('Specification assessment error:', error);
+    res.status(500).json({
+      error: 'Failed to assess specification readiness',
+      message: error.message
+    });
+  }
+});
+
 app.post('/api/v1/generate/prd', (req, res) => {
   const { title, type = 'lean', data } = req.body;
   const prd = generatePRD(type, {
@@ -179,8 +275,13 @@ app.get('/api/ollama/tags', async (req, res) => {
 });
 
 // Start server
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
-  console.log(`UI available at http://localhost:${PORT}`);
-  console.log(`API available at http://localhost:${PORT}/api`);
-});
+// Only start server if not being imported for testing
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+    console.log(`UI available at http://localhost:${PORT}`);
+    console.log(`API available at http://localhost:${PORT}/api`);
+  });
+}
+
+module.exports = app;

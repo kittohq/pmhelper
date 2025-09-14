@@ -1,0 +1,103 @@
+{
+  "name": "Migration Specification",
+  "templateType": "migration",
+  "description": "Technical specification for migrating or upgrading existing systems",
+  "sections": {
+    "currentStateAnalysis": {
+      "title": "Current State Analysis",
+      "description": "Analysis of the existing system",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the current architecture?",
+        "What are the pain points?",
+        "What data exists in the current system?",
+        "What are the current dependencies?"
+      ]
+    },
+    "targetArchitecture": {
+      "title": "Target Architecture",
+      "description": "Desired end state after migration",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the target architecture?",
+        "What improvements will be made?",
+        "What technologies will be used?",
+        "How will it address current pain points?"
+      ]
+    },
+    "migrationStrategy": {
+      "title": "Migration Strategy",
+      "description": "Step-by-step migration approach",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the migration approach (big bang, phased, parallel)?",
+        "What are the migration phases?",
+        "What's the timeline for each phase?",
+        "How will we maintain service during migration?"
+      ]
+    },
+    "dataTransformation": {
+      "title": "Data Transformation Plan",
+      "description": "How data will be migrated and transformed",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What data needs to be migrated?",
+        "What transformations are required?",
+        "How will data integrity be ensured?",
+        "What's the data validation approach?"
+      ]
+    },
+    "compatibilityStrategy": {
+      "title": "Compatibility Strategy",
+      "description": "Maintaining compatibility during migration",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How will backward compatibility be maintained?",
+        "What about API versioning?",
+        "How will clients be migrated?",
+        "What's the deprecation timeline?"
+      ]
+    },
+    "rollbackProcedures": {
+      "title": "Rollback Procedures",
+      "description": "How to revert if issues arise",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the rollback triggers?",
+        "How will rollback be performed?",
+        "What data needs to be preserved?",
+        "What's the rollback timeline?"
+      ]
+    },
+    "testingPlan": {
+      "title": "Testing Plan",
+      "description": "Testing strategy for the migration",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "How will migration be tested?",
+        "What are the test scenarios?",
+        "How will data integrity be verified?",
+        "What's the performance testing approach?"
+      ]
+    },
+    "riskMitigation": {
+      "title": "Risk Mitigation",
+      "description": "Risks and mitigation strategies",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the major risks?",
+        "What's the mitigation plan for each risk?",
+        "What are the contingency plans?",
+        "How will risks be monitored?"
+      ]
+    }
+  }
+}

@@ -1,0 +1,115 @@
+{
+  "name": "Implementation Specification",
+  "templateType": "implementation",
+  "description": "Standard technical specification for feature development",
+  "sections": {
+    "technicalOverview": {
+      "title": "Technical Overview",
+      "description": "High-level technical approach and architecture",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the high-level architecture?",
+        "What are the main components?",
+        "How does this fit into the existing system?",
+        "What are the key technical decisions?"
+      ]
+    },
+    "componentDesign": {
+      "title": "Component Design",
+      "description": "Detailed design of system components",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What are the key modules/services?",
+        "How do components interact?",
+        "What are the interfaces between components?",
+        "What are the component responsibilities?"
+      ]
+    },
+    "dataModel": {
+      "title": "Data Model",
+      "description": "Database schema and data structures",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What entities are needed?",
+        "What are the relationships between entities?",
+        "Database schema changes required?",
+        "Data migration requirements?"
+      ]
+    },
+    "apiDesign": {
+      "title": "API Design",
+      "description": "API endpoints and contracts",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What endpoints are needed?",
+        "Request/response formats?",
+        "Authentication and authorization approach?",
+        "Error handling strategy?"
+      ]
+    },
+    "testingStrategy": {
+      "title": "Testing Strategy",
+      "description": "Approach to testing the implementation",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Unit test coverage goals?",
+        "Integration test scenarios?",
+        "Performance test criteria?",
+        "Test data requirements?"
+      ]
+    },
+    "securityConsiderations": {
+      "title": "Security Considerations",
+      "description": "Security measures and considerations",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Authentication methods?",
+        "Data encryption requirements?",
+        "Input validation approach?",
+        "Security vulnerabilities to address?"
+      ]
+    },
+    "performanceRequirements": {
+      "title": "Performance Requirements",
+      "description": "Performance goals and optimization strategies",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "Response time requirements?",
+        "Throughput requirements?",
+        "Scalability considerations?",
+        "Resource constraints?"
+      ]
+    },
+    "deploymentPlan": {
+      "title": "Deployment Plan",
+      "description": "Strategy for deploying the implementation",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "Deployment stages?",
+        "Feature flags needed?",
+        "Rollback strategy?",
+        "Monitoring setup?"
+      ]
+    },
+    "dependencies": {
+      "title": "Dependencies & Risks",
+      "description": "External dependencies and technical risks",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "External service dependencies?",
+        "Third-party libraries needed?",
+        "Technical risks?",
+        "Mitigation strategies?"
+      ]
+    }
+  }
+}

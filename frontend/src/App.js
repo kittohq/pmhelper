@@ -5,6 +5,7 @@ import LeftPanel from './components/LeftPanel';
 import DocumentsPane from './components/DocumentsPane';
 import ChatPane from './components/ChatPane';
 import PRDEditor from './components/PRDEditor';
+import SpecificationView from './components/SpecificationView';
 import SystemPromptModal from './components/SystemPromptModal';
 import { useStore } from './store/appStore';
 import { ollamaService } from './services/ollamaService';
@@ -43,6 +44,29 @@ const RightPane = styled.div`
   overflow: hidden;
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  background: #f8f9fa;
+  border-bottom: 2px solid #e0e0e0;
+`;
+
+const Tab = styled.button`
+  padding: 0.75rem 1.5rem;
+  background: ${props => props.active ? 'white' : 'transparent'};
+  border: none;
+  border-bottom: ${props => props.active ? '2px solid #667eea' : '2px solid transparent'};
+  margin-bottom: -2px;
+  font-size: 0.9rem;
+  font-weight: ${props => props.active ? '600' : '400'};
+  color: ${props => props.active ? '#667eea' : '#666'};
+  cursor: pointer;
+  transition: all 0.2s;
+
+  &:hover {
+    background: ${props => props.active ? 'white' : '#f0f0f0'};
+  }
+`;
+
 const Header = styled.header`
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
@@ -79,6 +103,7 @@ function App() {
   const [availableModels, setAvailableModels] = useState([]);
   const [selectedModel, setSelectedModel] = useState(ollamaService.getCurrentModel());
   const [showSystemPrompt, setShowSystemPrompt] = useState(false);
+  const [rightPaneTab, setRightPaneTab] = useState('prd'); // 'prd' or 'specification'
 
   useEffect(() => {
     // Initialize with a PRD template if one doesn't exist
@@ -690,32 +715,53 @@ Try asking about specific sections like "How do I write user stories?" or "What 
       </MiddlePane>
 
       <RightPane>
-        <Header>
-          <Title>📝 PRD Editor</Title>
-          <Subtitle>
-            {currentProject ? currentProject.name : 'Select a project to begin'}
-          </Subtitle>
-        </Header>
-        {currentProject && currentPRD ? (
-          <PRDEditor />
-        ) : currentProject ? (
-          <div style={{ 
-            padding: '3rem', 
-            textAlign: 'center', 
-            color: '#999' 
-          }}>
-            <h3>Loading PRD...</h3>
-            <p>Initializing PRD template for {currentProject.name}</p>
-          </div>
+        <TabContainer>
+          <Tab
+            active={rightPaneTab === 'prd'}
+            onClick={() => setRightPaneTab('prd')}
+          >
+            📝 PRD Editor
+          </Tab>
+          <Tab
+            active={rightPaneTab === 'specification'}
+            onClick={() => setRightPaneTab('specification')}
+          >
+            🔧 Specification
+          </Tab>
+        </TabContainer>
+
+        {rightPaneTab === 'prd' ? (
+          <>
+            <Header>
+              <Title>📝 PRD Editor</Title>
+              <Subtitle>
+                {currentProject ? currentProject.name : 'Select a project to begin'}
+              </Subtitle>
+            </Header>
+            {currentProject && currentPRD ? (
+              <PRDEditor />
+            ) : currentProject ? (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#999'
+              }}>
+                <h3>Loading PRD...</h3>
+                <p>Initializing PRD template for {currentProject.name}</p>
+              </div>
+            ) : (
+              <div style={{
+                padding: '3rem',
+                textAlign: 'center',
+                color: '#999'
+              }}>
+                <h3>No Project Selected</h3>
+                <p>Select or create a project from the left panel to start working on a PRD</p>
+              </div>
+            )}
+          </>
         ) : (
-          <div style={{ 
-            padding: '3rem', 
-            textAlign: 'center', 
-            color: '#999' 
-          }}>
-            <h3>No Project Selected</h3>
-            <p>Select or create a project from the left panel to start working on a PRD</p>
-          </div>
+          <SpecificationView />
         )}
       </RightPane>
     </AppContainer>

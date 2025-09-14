@@ -105,6 +105,62 @@ export const useStore = create(
         return false;
       },
 
+      // Specification management
+      specifications: [],
+      currentSpec: null,
+      currentSpecTemplate: 'implementation',
+      engineeringNotes: '',
+
+      setCurrentSpec: (spec) => set({ currentSpec: spec }),
+      setSpecTemplate: (template) => set({ currentSpecTemplate: template }),
+      setEngineeringNotes: (notes) => set({ engineeringNotes: notes }),
+
+      createSpecification: (prdId, templateType = 'implementation') => {
+        const state = get();
+        const newSpec = {
+          id: Date.now(),
+          prdId,
+          templateType,
+          engineeringNotes: state.engineeringNotes || '',
+          sections: {},
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+
+        set((state) => ({
+          specifications: [...state.specifications, newSpec],
+          currentSpec: newSpec
+        }));
+        return newSpec;
+      },
+
+      updateSpecSection: (sectionKey, content) => set((state) => ({
+        currentSpec: state.currentSpec ? {
+          ...state.currentSpec,
+          sections: {
+            ...state.currentSpec.sections,
+            [sectionKey]: {
+              ...state.currentSpec.sections[sectionKey],
+              content,
+              updatedAt: new Date().toISOString()
+            }
+          },
+          updatedAt: new Date().toISOString()
+        } : null
+      })),
+
+      saveSpecToProject: () => {
+        const state = get();
+        if (state.currentProject && state.currentSpec) {
+          state.updateProject(state.currentProject.id, {
+            specification: state.currentSpec,
+            specStatus: 'active'
+          });
+          return true;
+        }
+        return false;
+      },
+
       // UI state
       activeView: 'chat',
       setActiveView: (view) => set({ activeView: view }),
@@ -118,7 +174,11 @@ export const useStore = create(
       name: 'pmhelper-storage',
       partialize: (state) => ({
         projects: state.projects,
-        currentProject: state.currentProject
+        currentProject: state.currentProject,
+        currentPRD: state.currentPRD,
+        specifications: state.specifications,
+        currentSpec: state.currentSpec,
+        engineeringNotes: state.engineeringNotes
       })
     }
   )

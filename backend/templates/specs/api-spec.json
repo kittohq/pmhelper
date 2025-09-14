@@ -1,0 +1,115 @@
+{
+  "name": "API Specification",
+  "templateType": "api",
+  "description": "Detailed specification for API-first development",
+  "sections": {
+    "apiOverview": {
+      "title": "API Overview",
+      "description": "High-level API design and purpose",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What's the API's purpose?",
+        "Who are the API consumers?",
+        "What's the API style (REST, GraphQL, gRPC)?",
+        "What are the key resources?"
+      ]
+    },
+    "authentication": {
+      "title": "Authentication & Authorization",
+      "description": "Security and access control",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Authentication method (OAuth2, JWT, API keys)?",
+        "Authorization model (RBAC, ABAC)?",
+        "How are tokens managed?",
+        "What are the security scopes?"
+      ]
+    },
+    "endpoints": {
+      "title": "Endpoint Specifications",
+      "description": "Detailed endpoint definitions",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "What endpoints are needed?",
+        "HTTP methods for each endpoint?",
+        "Request parameters and headers?",
+        "Response formats and status codes?"
+      ]
+    },
+    "dataFormats": {
+      "title": "Data Formats & Schemas",
+      "description": "Request and response data structures",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Request/response schemas?",
+        "Data validation rules?",
+        "Field constraints and formats?",
+        "Example payloads?"
+      ]
+    },
+    "errorHandling": {
+      "title": "Error Handling",
+      "description": "Error responses and recovery",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Error response format?",
+        "Error codes and messages?",
+        "Retry strategies?",
+        "Circuit breaker patterns?"
+      ]
+    },
+    "rateLimiting": {
+      "title": "Rate Limiting & Quotas",
+      "description": "API usage limits and throttling",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Rate limit thresholds?",
+        "Quota management?",
+        "Throttling strategy?",
+        "How are limits communicated?"
+      ]
+    },
+    "versioning": {
+      "title": "Versioning Strategy",
+      "description": "API versioning and evolution",
+      "content": "",
+      "required": true,
+      "prompts": [
+        "Versioning approach (URL, header, query)?",
+        "Version lifecycle?",
+        "Deprecation policy?",
+        "Migration strategy?"
+      ]
+    },
+    "documentation": {
+      "title": "Documentation Plan",
+      "description": "API documentation approach",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "Documentation format (OpenAPI, AsyncAPI)?",
+        "Interactive documentation?",
+        "Code examples?",
+        "SDK generation?"
+      ]
+    },
+    "monitoring": {
+      "title": "Monitoring & Analytics",
+      "description": "API monitoring and usage tracking",
+      "content": "",
+      "required": false,
+      "prompts": [
+        "What metrics to track?",
+        "Logging requirements?",
+        "Analytics dashboard?",
+        "Alert conditions?"
+      ]
+    }
+  }
+}
