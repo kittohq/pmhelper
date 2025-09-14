@@ -36,3 +36,7 @@ coverage/
 # Temporary files
 tmp/
 temp/
+
+# Python virtual environment
+venv/
+backend/venv/
